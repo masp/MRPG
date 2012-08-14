@@ -16,7 +16,7 @@ public class EffectNotFoundException extends RuntimeException {
 	
 	@Override
 	public String getMessage() {
-		return "Effect was unable to be found: " + getEffect();
+		return "Effect could not be found: " + getEffect();
 	}
 
 }
