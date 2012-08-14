@@ -1,0 +1,17 @@
+name: MRPGLight
+author: Denkfaehigkeit
+version: 0.1
+main: masp.plugins.mlight.MLight
+commands:
+   m:
+     description: Basic MRPG Light commands
+     usage: /m help
+   mrpg:
+     description: Basic MRPG Light commands
+     usage: /mrpg help
+   am:
+     description: Admin commands for MRPG Light
+     usage: /am help
+   amrpg:
+     description: Admin commands for MRPG Light
+     usage: /amrpg help
