@@ -3,13 +3,15 @@ package masp.plugins.mlight.data.player;
 import java.util.HashSet;
 import java.util.Set;
 
-import masp.plugins.mlight.MLight;
-import masp.plugins.mlight.data.MItem;
+import masp.plugins.mlight.MRPG;
 import masp.plugins.mlight.data.effects.EffectCollection;
 import masp.plugins.mlight.data.effects.types.MEffect;
+import masp.plugins.mlight.data.items.MItem;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public class ArmorParticipant implements EffectCollection {
 	
@@ -26,45 +28,42 @@ public class ArmorParticipant implements EffectCollection {
 	public MItem getHead() {
 		if (getPlayer() != null) {
 			if (getPlayer().getInventory().getHelmet() != null) {
-				return MLight.getInstance().getItemManager().getItem(getPlayer().getInventory().getHelmet().getTypeId());
+				return MRPG.getItemManager().getItem(getPlayer().getInventory().getHelmet());
 			}
 		}
-		return MLight.getInstance().getItemManager().getItem(0);
+		return MRPG.getItemManager().getItem(new ItemStack(Material.AIR));
 	}
 	
 	public MItem getBody() {
 		if (getPlayer() != null) {
 			if (getPlayer().getInventory().getChestplate() != null) {
-				return MLight.getInstance().getItemManager().getItem(getPlayer().getInventory().getChestplate().getTypeId());
+				return MRPG.getItemManager().getItem(getPlayer().getInventory().getChestplate());
 			}
 		}
-		return MLight.getInstance().getItemManager().getItem(0);
+		return MRPG.getItemManager().getItem(new ItemStack(Material.AIR));
 	}
 	
 	public MItem getLeggings() {
 		if (getPlayer() != null) {
 			if (getPlayer().getInventory().getLeggings() != null) {
-				return MLight.getInstance().getItemManager().getItem(getPlayer().getInventory().getLeggings().getTypeId());
+				return MRPG.getItemManager().getItem(getPlayer().getInventory().getLeggings());
 			}
 		}
-		return MLight.getInstance().getItemManager().getItem(0);
+		return MRPG.getItemManager().getItem(new ItemStack(Material.AIR));
 	}
 	
 	public MItem getBoots() {
 		if (getPlayer() != null) {
 			if (getPlayer().getInventory().getBoots() != null) {
-				return MLight.getInstance().getItemManager().getItem(getPlayer().getInventory().getBoots().getTypeId());
+				return MRPG.getItemManager().getItem(getPlayer().getInventory().getBoots());
 			}
 		}
-		return MLight.getInstance().getItemManager().getItem(0);
+		return MRPG.getItemManager().getItem(new ItemStack(Material.AIR));
 	}
 
 	@Override
 	public double getTotalEffects(MEffect effect) {
-		return getHead().getDefense().getTotalEffects(effect) +
-				getBody().getDefense().getTotalEffects(effect) +
-				getLeggings().getDefense().getTotalEffects(effect) +
-				getBoots().getDefense().getTotalEffects(effect);
+		return ((getTotalEffectsPercent(effect) / 100D) * getTotalEffectsDecimal(effect)) + getTotalEffectsDecimal(effect);
 	}
 
 	@Override

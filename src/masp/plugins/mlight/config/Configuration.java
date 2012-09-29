@@ -3,18 +3,20 @@ package masp.plugins.mlight.config;
 import java.io.File;
 import java.io.IOException;
 
-import masp.plugins.mlight.MLight;
+import masp.plugins.mlight.MRPG;
+import masp.plugins.mlight.data.effects.EffectParticipant;
+import masp.plugins.mlight.data.effects.types.MEffect;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 
 public abstract class Configuration {
 	
-	private MLight plugin;
+	private MRPG plugin;
 	private YamlConfiguration config;
 	private String name;
 	private File dir;
 	
-	public Configuration(String name, MLight plugin, File dir) {
+	public Configuration(String name, MRPG plugin, File dir) {
 		this.plugin = plugin;
 		this.dir = dir;
 		this.name = name;
@@ -26,7 +28,7 @@ public abstract class Configuration {
 		return name;
 	}
 	
-	public MLight getPlugin() {
+	public MRPG getPlugin() {
 		return plugin;
 	}
 	
@@ -56,6 +58,35 @@ public abstract class Configuration {
 			dir.mkdirs();
 		}
 		return dir;
+	}
+	
+	public EffectParticipant loadEffects(EffectParticipant participant, String path) {
+		if (getConfig().getConfigurationSection(path + ".decimal") != null) {
+			for (String effectName : getConfig().getConfigurationSection(path + ".decimal").getKeys(false)) {
+				MEffect effect = MRPG.getEffectManager().getEffect(effectName);
+				if (effect == null) {
+					getPlugin().getLogger().info(
+							"Configuration Error: No effect by name " + effectName + " for path " + path + ".decimal." + effect);
+					return participant;
+				}
+				
+				participant.setEffectDecimal(effect, getConfig().getDouble(path + ".decimal." + effectName));
+			}
+		}
+		
+		if (getConfig().getConfigurationSection(path + ".percent") != null) {
+			for (String effectName : getConfig().getConfigurationSection(path + ".percent").getKeys(false)) {
+				MEffect effect = MRPG.getEffectManager().getEffect(effectName);
+				if (effect == null) {
+					getPlugin().getLogger().info(
+							"Configuration Error: No effect by name " + effectName + " for path " + path + ".decimal." + effect);
+					return participant;
+				}
+				
+				participant.setEffectPercent(effect, getConfig().getDouble(path + ".percent." + effectName));
+			}
+		}
+		return participant;
 	}
 	
 	@Override

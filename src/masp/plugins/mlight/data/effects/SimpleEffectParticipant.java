@@ -1,10 +1,11 @@
 package masp.plugins.mlight.data.effects;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import masp.plugins.mlight.MLight;
+import masp.plugins.mlight.MRPG;
 import masp.plugins.mlight.data.effects.types.MEffect;
 
 public class SimpleEffectParticipant implements EffectParticipant {
@@ -12,7 +13,7 @@ public class SimpleEffectParticipant implements EffectParticipant {
 	private Map<MEffect, EffectData> effects = new HashMap<MEffect, EffectData>();
 	
 	public SimpleEffectParticipant() {
-		for (MEffect effect : MLight.getInstance()
+		for (MEffect effect : MRPG
 				.getEffectManager()
 				.getEffects()) {
 			effects.put(effect, new EffectData());
@@ -21,12 +22,18 @@ public class SimpleEffectParticipant implements EffectParticipant {
 	
 	@Override
 	public double getTotalEffects(MEffect effect) {
-		return getTotalEffectsPercent(effect) + getTotalEffectsDecimal(effect);
+		return (getTotalEffectsDecimal(effect) * (getTotalEffectsPercent(effect) / 100D)) + getTotalEffectsDecimal(effect);
 	}
 
 	@Override
 	public Set<MEffect> getEffects() {
-		return effects.keySet();
+		Set<MEffect> data = new HashSet<MEffect>();
+		for (MEffect effect : effects.keySet()) {
+			if (effects.get(effect).getDecimal() != 0 || effects.get(effect).getPercent() != 0) {
+				data.add(effect);
+			}
+		}
+		return data;
 	}
 
 	@Override
@@ -47,7 +54,7 @@ public class SimpleEffectParticipant implements EffectParticipant {
 	
 	@Override
 	public double getTotalEffectsPercent(MEffect effect) {
-		return (effects.get(effect).getDecimal() * (effects.get(effect).getPercent() / 100));
+		return effects.get(effect).getPercent();
 	}
 
 	@Override

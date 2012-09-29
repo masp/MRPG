@@ -6,8 +6,18 @@ public class Settings {
 	public static float EXP_RATE = 1.0f;
 	public static int DEFAULT_SKILL_POINTS = 1;
 	public static long DEFAULT_ATTACK_SPEED = 600;
+	public static int DANGER_HEALTH_INCREASE = 3;
+	public static int DANGER_DAMAGE_INCREASE = 3;
+	
+	public static int DEFAULT_MAX_WEIGHT = 100;
 	
 	public static int CONVERSION_FACTOR = DEFAULT_MAX_HEALTH / 20;
+	
+	public static int DANGER_DISTANCE = 10;
+	
+	public static double SIGHT_INCREASE = 0.2D;
+	
+	public static float MOB_SPEED_INCREASE_RATE = 0.01f;
 	
 	public static int CACTUS_DAMAGE = 5;
 	public static int DROWNING_DAMAGE = 5;

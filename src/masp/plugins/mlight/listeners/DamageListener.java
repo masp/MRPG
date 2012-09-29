@@ -2,7 +2,7 @@ package masp.plugins.mlight.listeners;
 
 import java.util.ArrayList;
 
-import masp.plugins.mlight.MLight;
+import masp.plugins.mlight.MRPG;
 import masp.plugins.mlight.Settings;
 import masp.plugins.mlight.Utils;
 import masp.plugins.mlight.data.Damageable;
@@ -29,42 +29,38 @@ import org.bukkit.event.entity.EntityRegainHealthEvent;
 
 public class DamageListener implements Listener {
 	
-	private MLight plugin;
-	
-	public DamageListener(MLight plugin) {
-		this.plugin = plugin;
-	}
-	
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void handleCustomDamage(EntityDamageEvent event) {
+		if (event.getEntity().isDead()) return;
+		
 		event.setCancelled(true);
 		if (event instanceof EntityDamageByEntityEvent) {
 			EntityDamageByEntityEvent nEvent = (EntityDamageByEntityEvent) event;
 			if (event.getEntity() instanceof Player) {
 				if (nEvent.getDamager() instanceof Player) {
-					MPlayer attacker = plugin.getPlayer(((Player) nEvent.getDamager()).getName());
-					MPlayer defender = plugin.getPlayer(((Player) event.getEntity()).getName());
+					MPlayer attacker = MRPG.getPlayer(((Player) nEvent.getDamager()).getName());
+					MPlayer defender = MRPG.getPlayer(((Player) event.getEntity()).getName());
 					handlePlayerAttack(attacker, defender);
 				}  else if (nEvent.getDamager() instanceof LivingEntity) {
-					MPlayer defender = plugin.getPlayer((Player) event.getEntity());
+					MPlayer defender = MRPG.getPlayer((Player) event.getEntity());
 					handleEntityAttackPlayer((LivingEntity) nEvent.getDamager(), defender);
 				} else if (nEvent.getDamager() instanceof Projectile) {
 					if (nEvent.getDamager() instanceof Fireball) {
 						Fireball ball = (Fireball) nEvent.getDamager();
-						handleEntityAttackPlayer(ball.getShooter(), plugin.getPlayer((Player) nEvent.getEntity()));
+						handleEntityAttackPlayer(ball.getShooter(), MRPG.getPlayer((Player) nEvent.getEntity()));
 					} else if (nEvent.getDamager() instanceof Arrow) {
 						Arrow arrow = (Arrow) nEvent.getDamager();
 						if (arrow.getShooter() instanceof Player) {
-							MPlayer attacker = plugin.getPlayer((Player) arrow.getShooter());
-							handlePlayerShootPlayer(attacker, plugin.getPlayer((Player) event.getEntity()), arrow);
+							MPlayer attacker = MRPG.getPlayer((Player) arrow.getShooter());
+							handlePlayerShootPlayer(attacker, MRPG.getPlayer((Player) event.getEntity()), arrow);
 						} else {
-							handleEntityShootPlayer(arrow.getShooter(), plugin.getPlayer((Player) event.getEntity()), arrow);
+							handleEntityShootPlayer(arrow.getShooter(), MRPG.getPlayer((Player) event.getEntity()), arrow);
 						}
 					}
 				}
 			} else if (event.getEntity() instanceof LivingEntity) {
 				if (nEvent.getDamager() instanceof Player) {
-					MPlayer attacker = plugin.getPlayer(((Player) nEvent.getDamager()).getName());
+					MPlayer attacker = MRPG.getPlayer(((Player) nEvent.getDamager()).getName());
 					handlePlayerAttackEntity(attacker, (LivingEntity) event.getEntity());
 				} else if (nEvent.getDamager() instanceof LivingEntity) {
 					handleEntityAttackEntity((LivingEntity) nEvent.getDamager(), (LivingEntity) event.getEntity());
@@ -73,7 +69,7 @@ public class DamageListener implements Listener {
 						handleEntityAttackEntity(((Fireball) nEvent.getDamager()).getShooter(), (LivingEntity) nEvent.getEntity());
 					} else if (nEvent.getDamager() instanceof Arrow) {
 						if (((Arrow) nEvent.getDamager()).getShooter() instanceof Player) {
-							MPlayer attacker = plugin.getPlayer((Player) ((Arrow) nEvent.getDamager()).getShooter());
+							MPlayer attacker = MRPG.getPlayer((Player) ((Arrow) nEvent.getDamager()).getShooter());
 							handlePlayerShootEntity(attacker, (LivingEntity) nEvent.getEntity(), (Arrow) nEvent.getDamager());
 						} else {
 							handleEntityShootEntity((LivingEntity) ((Arrow) nEvent.getDamager()).getShooter(), 
@@ -103,6 +99,10 @@ public class DamageListener implements Listener {
 		if (System.currentTimeMillis() - attacker.getLastAttack() >= Settings.DEFAULT_ATTACK_SPEED) {
 			attacker.setLastAttack(System.currentTimeMillis());
 			int totalWeaponDamage = Utils.getTotalDamage(attacker, defender);
+			if (totalWeaponDamage <= 0) {
+				attacker.sendMessage(ChatColor.RED + "Miss!");
+				return;
+			}
 			attacker.getPlayer().sendMessage(ChatColor.BLUE + "You dealt " + ChatColor.GREEN + totalWeaponDamage + ChatColor.BLUE + " damage!");
 			defender.damage(totalWeaponDamage, attacker.getPlayer());
 			Utils.knockback(attacker, attacker.getPlayer(), defender.getPlayer());
@@ -112,8 +112,13 @@ public class DamageListener implements Listener {
 	public void handlePlayerAttackEntity(MPlayer attacker, LivingEntity defender) {
 		if (System.currentTimeMillis() - attacker.getLastAttack() >= Settings.DEFAULT_ATTACK_SPEED) {
 			attacker.setLastAttack(System.currentTimeMillis());
-			MCreature creature = plugin.getMobManager().getCreature(defender.getType().name());
-			int totalWeaponDamage = Utils.getTotalDamage(attacker, creature);
+			MCreature creature = MRPG.getMobManager().getCreature(defender.getType().name());
+			EffectCollection effects = MRPG.getMobManager().getCreatureEffects(defender);
+			int totalWeaponDamage = Utils.getTotalDamage(attacker, effects);
+			if (totalWeaponDamage <= 0) {
+				attacker.sendMessage(ChatColor.RED + "Miss!");
+				return;
+			}
 			attacker.getPlayer().sendMessage(ChatColor.BLUE + "You dealt " + ChatColor.GREEN + totalWeaponDamage + ChatColor.BLUE + " damage!");
 			// Replicate the damage
 			creature.damage(totalWeaponDamage, attacker.getPlayer(), defender);
@@ -121,8 +126,8 @@ public class DamageListener implements Listener {
 	}
 	
 	public void handleEntityAttackPlayer(LivingEntity attacker, MPlayer defender) {
-		MCreature creature = plugin.getMobManager().getCreature(attacker.getType().name());
-		int totalDamage = Utils.getTotalDamage(creature, defender);
+		EffectCollection effects = MRPG.getMobManager().getCreatureEffects(attacker);
+		int totalDamage = Utils.getTotalDamage(effects, defender);
 		if (attacker instanceof Slime) {
 			Slime slime = (Slime) attacker;
 			// Remove damage if the slime is 0, well, remove it as much as default configured.
@@ -138,14 +143,22 @@ public class DamageListener implements Listener {
 			}
 		}
 		
+		if (totalDamage <= 0) {
+			return;
+		}
+		
 		defender.damage(totalDamage, defender.getPlayer());
-		Utils.knockback(creature, attacker, defender.getPlayer());
+		Utils.knockback(effects, attacker, defender.getPlayer());
 	}
 	
 	public void handleEntityAttackEntity(LivingEntity attacker, LivingEntity defender) {
-		MCreature cAttacker = plugin.getMobManager().getCreature(attacker.getType().name());
-		MCreature cDefender = plugin.getMobManager().getCreature(defender.getType().name());
-		int damage = Utils.getTotalDamage(cAttacker, cDefender);
+		EffectCollection aEffects = MRPG.getMobManager().getCreatureEffects(attacker);
+		MCreature cDefender = MRPG.getMobManager().getCreature(defender.getType().name());
+		EffectCollection dEffects = MRPG.getMobManager().getCreatureEffects(defender);
+		int damage = Utils.getTotalDamage(aEffects, dEffects);
+		if (damage <= 0) {
+			return;
+		}
 		cDefender.damage(damage, attacker, defender);
 	}
 	
@@ -158,35 +171,50 @@ public class DamageListener implements Listener {
 	 */
 	public void handlePlayerShootPlayer(MPlayer attacker, MPlayer defender, Arrow shot) {
 		shot.remove();
-		int totalDamage = Utils.getTotalDamage(plugin.getItemManager().getItem(-1).getAttack(), 
+		int totalDamage = Utils.getTotalDamage(MRPG.getItemManager().getItem(-1).getAttack(), 
 				defender, 
 				new ArrayList<EffectCollection>(attacker.getSkills()));
+		if (totalDamage <= 0) {
+			attacker.sendMessage(ChatColor.RED + "Miss!");
+			return;
+		}
 		attacker.getPlayer().sendMessage(ChatColor.BLUE + "You dealt " + ChatColor.GREEN + totalDamage + ChatColor.BLUE + " damage!");
 		defender.damage(totalDamage, defender.getPlayer());
 	}
 	
 	public void handlePlayerShootEntity(MPlayer attacker, LivingEntity defender, Arrow shot) {
 		shot.remove();
-		MCreature cDefender = plugin.getMobManager().getCreature(defender.getType().name());
-		int totalDamage = Utils.getTotalDamage(plugin.getItemManager().getItem(-1).getAttack(), 
-				cDefender,
+		MCreature cDefender = MRPG.getMobManager().getCreature(defender.getType().name());
+		EffectCollection effects = MRPG.getMobManager().getCreatureEffects(defender);
+		int totalDamage = Utils.getTotalDamage(MRPG.getItemManager().getItem(-1).getAttack(), 
+				effects,
 				new ArrayList<EffectCollection>(attacker.getSkills()));
+		if (totalDamage <= 0) {
+			attacker.sendMessage(ChatColor.RED + "Miss!");
+			return;
+		}
 		attacker.getPlayer().sendMessage(ChatColor.BLUE + "You dealt " + ChatColor.GREEN + totalDamage + ChatColor.BLUE + " damage!");
 		cDefender.damage(totalDamage, attacker.getPlayer(), defender);
 	}
 	
 	public void handleEntityShootPlayer(LivingEntity attacker, MPlayer defender, Arrow shot) {
 		shot.remove();
-		MCreature cAttacker = plugin.getMobManager().getCreature(attacker.getType().name());
-		int totalDamage = Utils.getTotalDamage(cAttacker, defender);
+		EffectCollection effects = MRPG.getMobManager().getCreatureEffects(attacker);
+		int totalDamage = Utils.getTotalDamage(effects, defender);
+		if (totalDamage <= 0) {
+			return;
+		}
 		defender.damage(totalDamage, defender.getPlayer());
 	}
 	
 	public void handleEntityShootEntity(LivingEntity attacker, LivingEntity defender, Arrow shot) {
 		shot.remove();
-		MCreature cAttacker = plugin.getMobManager().getCreature(attacker.getType().name());
-		MCreature cDefender = plugin.getMobManager().getCreature(attacker.getType().name());
+		MCreature cAttacker = MRPG.getMobManager().getCreature(attacker.getType().name());
+		MCreature cDefender = MRPG.getMobManager().getCreature(attacker.getType().name());
 		int totalDamage = Utils.getTotalDamage(cAttacker, cDefender);
+		if (totalDamage <= 0) {
+			return;
+		}
 		cDefender.damage(totalDamage,  attacker, defender);
 	}
 	
@@ -197,9 +225,9 @@ public class DamageListener implements Listener {
 	public void handleMiscDamage(LivingEntity entity, EntityDamageEvent event, DamageCause cause) {
 		Damageable damaged = null;
 		if (entity instanceof Player) {
-			damaged = plugin.getPlayer((Player) entity);
+			damaged = MRPG.getPlayer((Player) entity);
 		} else {
-			damaged = plugin.getMobManager().getCreature(entity.getType().name());
+			damaged = MRPG.getMobManager().getCreature(entity.getType().name());
 		}
 		
 		if (damaged == null) {
@@ -224,7 +252,10 @@ public class DamageListener implements Listener {
 		} else if (cause == DamageCause.FIRE) {
 			damaged.damage(Settings.FIRE_DAMAGE, entity);
 		} else if (cause == DamageCause.LAVA) {
-			damaged.damage(Settings.LAVA_DAMAGE, entity);
+			if (entity.getNoDamageTicks() == 0) {
+				damaged.damage(Settings.LAVA_DAMAGE, entity);
+				entity.setNoDamageTicks(10);
+			}
 		} else if (cause == DamageCause.LIGHTNING) {
 			damaged.damage(Settings.LIGHTNING_DAMAGE, entity);
 		} else if (cause == DamageCause.MAGIC) {

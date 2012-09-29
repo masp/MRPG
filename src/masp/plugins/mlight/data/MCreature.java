@@ -1,9 +1,12 @@
 package masp.plugins.mlight.data;
 
-import masp.plugins.mlight.MLight;
+import masp.plugins.mlight.MRPG;
 import masp.plugins.mlight.Utils;
 import masp.plugins.mlight.data.effects.EffectCollection;
+import masp.plugins.mlight.data.effects.EffectManager;
+import masp.plugins.mlight.data.effects.EffectParticipant;
 import masp.plugins.mlight.data.effects.SimpleEffectParticipant;
+import masp.plugins.mlight.managers.MobEffectManager;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
@@ -46,9 +49,9 @@ public class MCreature extends SimpleEffectParticipant implements Damageable {
 		if (damage > 0) {
 			EffectCollection knocker = null;
 			if (attacker instanceof Player) {
-				knocker = MLight.getInstance().getPlayer(((Player) attacker).getName());
+				knocker = MRPG.getPlayer(((Player) attacker).getName());
 			} else {
-				knocker = MLight.getInstance().getMobManager().getCreature(attacker.getType().name());
+				knocker = MRPG.getMobManager().getCreature(attacker.getType().name());
 			}
 			Utils.knockback(knocker, attacker, entity);
 		}
@@ -58,7 +61,15 @@ public class MCreature extends SimpleEffectParticipant implements Damageable {
 	
 	@Override
 	public void damage(int damage, LivingEntity entity) {
+		final MobEffectManager mEffManager = MRPG.getMobEffectManager();
+		final EffectManager effManager = MRPG.getEffectManager();
+		final EffectParticipant mobPart = mEffManager.getEffects(entity);
+		
 		int tempMaxHealth = maxHealth;
+		if (mobPart != null) {
+			tempMaxHealth += mobPart.getTotalEffects(effManager.getEffect(EffectManager.HEALTH));
+		}
+		
 		if (damage <= 0) {
 			return;
 		}
@@ -91,13 +102,16 @@ public class MCreature extends SimpleEffectParticipant implements Damageable {
 		currentCreatureHealth -= damage;
 		
 		int convertedReducedHealth = (currentCreatureHealth * entity.getMaxHealth()) / tempMaxHealth;
+		if (convertedReducedHealth <= 0) {
+			this.kill(entity);
+			return;
+		}
 		entity.setHealth(convertedReducedHealth);
 	}
 	
 	public void kill(final LivingEntity entity) {
 		((CraftWorld) entity.getWorld()).getHandle().broadcastEntityEffect(((CraftLivingEntity) entity).getHandle(), (byte) 3);
-		entity.setHealth(0);
-		Bukkit.getScheduler().scheduleSyncDelayedTask(MLight.getInstance(),
+		Bukkit.getScheduler().scheduleSyncDelayedTask(MRPG.getInstance(),
 				new Runnable() {
 					@Override
 					public void run() {
@@ -106,6 +120,7 @@ public class MCreature extends SimpleEffectParticipant implements Damageable {
 					}
 				}, 20L
 		);
+		entity.setHealth(0);
 	}
 	
 	@Override

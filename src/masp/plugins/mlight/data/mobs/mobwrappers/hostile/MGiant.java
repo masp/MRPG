@@ -1,0 +1,37 @@
+package masp.plugins.mlight.data.mobs.mobwrappers.hostile;
+
+import masp.plugins.mlight.Utils;
+import masp.plugins.mlight.data.mobs.MDangerMob;
+import net.minecraft.server.EntityGiantZombie;
+import net.minecraft.server.World;
+
+import org.bukkit.Location;
+import org.bukkit.entity.LivingEntity;
+
+public class MGiant extends EntityGiantZombie implements MDangerMob {
+
+	private short dangerLevel;
+	private boolean changed = false;
+	
+	public MGiant(World world) {
+		super(world);
+	}
+	
+	public MGiant(World world, Location spawn) {
+		super(world);
+		this.changed = true;
+		this.dangerLevel = (short) Utils.getDanger(spawn.getWorld(), spawn.getBlockX(), spawn.getBlockZ());
+		
+		Utils.addMobEffects((LivingEntity) this.getBukkitEntity(), dangerLevel);
+	}
+	
+	public boolean isChanged() {
+		return changed;
+	}
+
+	@Override
+	public short getDangerLevel() {
+		return dangerLevel;
+	}
+
+}

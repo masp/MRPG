@@ -6,8 +6,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import masp.plugins.mlight.MLight;
+import masp.plugins.mlight.MRPG;
 import masp.plugins.mlight.Settings;
+import masp.plugins.mlight.data.Attribute;
 import masp.plugins.mlight.data.player.MPlayer;
 import masp.plugins.mlight.database.Database;
 import masp.plugins.mlight.database.MySQL;
@@ -18,9 +19,9 @@ import org.bukkit.entity.Player;
 public class DataManager {
 	
 	private Database database;
-	private MLight plugin;
+	private MRPG plugin;
 	
-	public DataManager(MLight plugin) {
+	public DataManager(MRPG plugin) {
 		this.plugin = plugin;
 	}
 	
@@ -52,48 +53,70 @@ public class DataManager {
 					"`health` INTEGER NOT NULL," + 
 					"`max_health` INTEGER NOT NULL," +
 					"`skill_points` INTEGER NOT NULL DEFAULT '0');");	
-			database.execute(conn, 
-					"CREATE TABLE IF NOT EXISTS `player_skills` (" +
-					"`s_id` INTEGER PRIMARY KEY NOT NULL," +
-					"`player_id` INTEGER NOT NULL," +
-					"`skill_name` TEXT NOT NULL DEFAULT ''," +
-					"`amount` INTEGER NOT NULL DEFAULT '1');");
+
+			database.execute(conn,
+					"CREATE TABLE IF NOT EXISTS `mrpg_attributes` (" +
+					"`s_id` PRIMARY KEY," +
+					"`p_id` INTEGER NOT NULL," +
+					"`att_name` TEXT NOT NULL," +
+					"`amount` INTEGER NOT NULL DEFAULT '0.0'," +
+					"UNIQUE (att_name, p_id) ON CONFLICT REPLACE);");
 		} else {
 			database.execute(conn, 
 					"CREATE TABLE IF NOT EXISTS `players` (" +
-					"`id` INT PRIMARY_KEY AUTO_INCREMENT," +
+					"`id` INT(6) PRIMARY_KEY AUTO_INCREMENT," +
 					"`owner` VARCHAR(255) NOT NULL DEFAULT ''," +
 					"`exp` DECIMAL(18, 4) NOT NULL DEFAULT '0'," +
-					"`health` INT NOT NULL," +
-					"`max_health` INT NOT NULL," + 
-					"`skill_points` INT NOT NULL DEFAULT '0');");
-			database.execute(conn, 
-					"CREATE TABLE IF NOT EXISTS `player_skills` (" +
-					"`s_id` INT PRIMARY_KEY AUTO_INCREMENT NOT NULL," +
-					"`player_id` INT NOT NULL," +
-					"`skill_name` VARCHAR(255) PRIMARY_KEY NOT NULL DEFAULT ''," +
-					"`amount` INT NOT NULL DEFAULT '1');");
+					"`health` INT(6) NOT NULL," +
+					"`max_health` INT(12) NOT NULL," + 
+					"`skill_points` INT(12) NOT NULL DEFAULT '0');");
+			database.execute(conn,
+					"CREATE TABLE IF NOT EXISTS `mrpg_attributes` (" +
+					"`s_id` PRIMARY_KEY AUTO_INCREMENT," +
+					"`p_id` INT(15) NOT NULL," +
+					"`att_name` VARCHAR(255) NOT NULL DEFAULT ''," +
+					"`amount` FLOAT(9, 2) NOT NULL DEFAULT '0.0'," +
+					"UNIQUE (att_name, p_id) ON CONFLICT REPLACE);");
 		}
 	}
 	
 	public void savePlayer(MPlayer player) throws SQLException {
 		Connection conn = database.getConnection();
+		System.out.println("REACHED");
 		int id = getPlayerId(player.getName(), conn);
 		if (id == 0) {
 			PreparedStatement stmt = conn.prepareStatement(
-					"INSERT INTO `players` (owner, exp, skill_points) VALUES (?, ?, ?);");
+					"INSERT INTO `players` (owner, exp, skill_points, health, max_health) VALUES (?, ?, ?, ?, ?);");
 			stmt.setString(1, player.getName());
 			stmt.setDouble(2, player.getExperience());
 			stmt.setInt(3, player.getSkillPoints());
+			stmt.setInt(4, player.getHealth());
+			stmt.setInt(5, player.getMaxHealth());
 			stmt.execute();
 			stmt.close();
+			
+			id = getPlayerId(player.getName(), conn);
+			
 		} else {
 			PreparedStatement stmt = conn.prepareStatement(
-					"UPDATE `players` SET exp=?, skill_points=? WHERE id=" + id + ";");
+					"UPDATE `players` SET exp=?, skill_points=?, health=?, max_health=? WHERE id=" + id + ";");
 			stmt.setDouble(1, player.getExperience());
 			stmt.setInt(2, player.getSkillPoints());
+			stmt.setInt(3, player.getHealth());
+			stmt.setInt(4, player.getMaxHealth());
 			stmt.executeUpdate();
 			stmt.close();
+		}
+		
+		for (Attribute skill : MRPG.getAttributeManager().getSkills()) {
+			System.out.println("REACHED SKILL " + skill.getName());
+			PreparedStatement skillStatement = conn.prepareStatement(
+					"INSERT INTO `mrpg_attributes` (p_id, att_name, amount) VALUES (?, ?, ?);");
+			skillStatement.setInt(1, id);
+			skillStatement.setString(2, skill.getName());
+			skillStatement.setFloat(3, player.getSkillValue(skill.getName()));
+			skillStatement.execute();
+			skillStatement.close();
 		}
 		conn.close();
 	}
@@ -111,17 +134,34 @@ public class DataManager {
 			stmt.setInt(5, Settings.DEFAULT_MAX_HEALTH);
 			stmt.execute();
 			stmt.close();
+			
+			id = getPlayerId(player.getName(), conn);
 		}
+		
 		MPlayer mPlayer = new MPlayer(player);
 		PreparedStatement stmt = conn.prepareStatement(
-				"SELECT exp,skill_points FROM `players` WHERE id=" + id);
+				"SELECT exp,skill_points,health,max_health FROM `players` WHERE id=" + id);
 		ResultSet set = stmt.executeQuery();
 		while (set.next()) {
 			mPlayer.setExperience(set.getDouble("exp"));
 			mPlayer.setSkillPoints(set.getInt("skill_points"));
+			mPlayer.setHealth(set.getInt("health"));
+			mPlayer.setMaxHealth(set.getInt("max_health"));
 		}
 		set.close();
 		stmt.close();
+		
+		for (Attribute skill : MRPG.getAttributeManager().getSkills()) {
+			PreparedStatement skillStmt = conn.prepareStatement(
+					"SELECT amount FROM `mrpg_attributes` WHERE p_id=" + id + " AND att_name='" + skill.getName() + "';");
+			ResultSet skillSet = skillStmt.executeQuery();
+			while (skillSet.next()) {
+				mPlayer.setSkillValue(skill, skillSet.getInt("amount"));
+			}
+			skillSet.close();
+			skillStmt.close();
+		}
+		
 		conn.close();
 		return mPlayer;
 	}

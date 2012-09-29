@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import masp.plugins.mlight.MLight;
+import masp.plugins.mlight.MRPG;
 import masp.plugins.mlight.data.MCreature;
 import masp.plugins.mlight.data.effects.types.MEffect;
 
@@ -69,7 +69,7 @@ public class MobConfiguration extends Configuration {
 		mobDamages.put("VILLAGER", 0);
 	}
 	
-	public MobConfiguration(MLight plugin, File dir) {
+	public MobConfiguration(MRPG plugin, File dir) {
 		super("mobinfo", plugin, dir);
 	}
 
@@ -93,7 +93,7 @@ public class MobConfiguration extends Configuration {
 		for (EntityType type : EntityType.values()) {
 			if (type.isAlive() && !(type.name().equalsIgnoreCase("player"))) {
 				MCreature creature = new MCreature(type, getConfig().getInt("mobs." + type.name().toLowerCase() + ".max-health",  mobHealths.get(type.name()) * 5));
-				getPlugin().getMobManager().addCreature(creature);
+				MRPG.getMobManager().addCreature(creature);
 				/*
 				 * Add the effects
 				 */
@@ -101,7 +101,7 @@ public class MobConfiguration extends Configuration {
 					for (String sEffect : 
 						getConfig().getConfigurationSection("mobs." + type.name().toLowerCase() + ".effects").getKeys(false)) {
 						
-						MEffect effect = getPlugin().getEffectManager().getEffect(sEffect);
+						MEffect effect = MRPG.getEffectManager().getEffect(sEffect);
 						if (effect == null) {
 							getPlugin().getLogger().warning("Configuration Error: No effect exists by the name " + sEffect + " in mob configuration for mob " + type.name());
 							continue;

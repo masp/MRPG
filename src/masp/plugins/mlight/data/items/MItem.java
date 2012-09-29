@@ -1,25 +1,25 @@
-package masp.plugins.mlight.data;
+package masp.plugins.mlight.data.items;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import masp.plugins.mlight.data.effects.EffectParticipant;
 import masp.plugins.mlight.data.effects.EffectCollection;
+import masp.plugins.mlight.data.effects.EffectParticipant;
 import masp.plugins.mlight.data.effects.SimpleEffectParticipant;
 import masp.plugins.mlight.data.effects.types.MEffect;
 
-import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 public class MItem implements EffectCollection {
 	
 	private int id;
 	private byte data;
+	private boolean custom = false;
 	
 	private EffectParticipant attack;
 	private EffectParticipant defense;
 	
-	public MItem(int id, byte data) {
+	public MItem(int id, byte data, boolean custom) {
 		this.id = id;
 		this.data = data;
 		
@@ -27,8 +27,12 @@ public class MItem implements EffectCollection {
 		defense = new SimpleEffectParticipant();
 	}
 	
-	public MItem(ItemStack item) {
-		this(item.getTypeId(), item.getData().getData());
+	public MItem(ItemStack item, boolean custom) {
+		this(custom ? item.getDurability() : item.getTypeId(), item.getData().getData(), custom);
+	}
+	
+	public boolean isCustom() {
+		return custom;
 	}
 	
 	public int getId() {
@@ -37,13 +41,6 @@ public class MItem implements EffectCollection {
 	
 	public short getData() {
 		return data;
-	}
-	
-	public Material getMaterial() {
-		if (id == -1) {
-			return null;
-		}
-		return Material.getMaterial(id);
 	}
 	
 	public EffectParticipant getAttack() {

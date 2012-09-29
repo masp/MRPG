@@ -3,7 +3,7 @@ package masp.plugins.mlight.config;
 import java.io.File;
 import java.io.IOException;
 
-import masp.plugins.mlight.MLight;
+import masp.plugins.mlight.MRPG;
 
 public class DatabaseConfiguration extends Configuration {
 	
@@ -15,7 +15,7 @@ public class DatabaseConfiguration extends Configuration {
 	
 	private boolean isMySQLEnabled = false;
 	
-	public DatabaseConfiguration(MLight plugin, File dir) {
+	public DatabaseConfiguration(MRPG plugin, File dir) {
 		super("database", plugin, dir);
 	}
 

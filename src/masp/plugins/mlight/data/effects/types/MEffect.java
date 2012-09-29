@@ -31,4 +31,9 @@ public class MEffect implements Comparable<MEffect> {
 	public int compareTo(MEffect effect) {
 		return getName().compareToIgnoreCase(effect.getName());
 	}
+	
+	@Override
+	public String toString() {
+		return name;
+	}
 }

@@ -3,10 +3,10 @@ package masp.plugins.mlight.managers;
 import java.util.ArrayList;
 import java.util.List;
 
-import masp.plugins.mlight.data.MItem;
+import masp.plugins.mlight.data.items.MItem;
 
-import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.getspout.spoutapi.inventory.SpoutItemStack;
 
 public class ItemManager {
 	
@@ -20,7 +20,7 @@ public class ItemManager {
 		items.add(item);
 	}
 	
-	public void removeItem(int id) {
+	private void removeItem(int id) {
 		for (MItem item : items) {
 			if (item.getId() == id) {
 				items.remove(item);
@@ -28,32 +28,36 @@ public class ItemManager {
 		}
 	}
 	
+	public void removeItem(ItemStack item) {
+		if (new SpoutItemStack(item).isCustomItem()) {
+			removeItem(item.getDurability());
+		} else {
+			removeItem(item.getTypeId());
+		}
+	}
+	
+	/*
+	 * You must use custom ID's if it is a custom item!
+	 */
 	public MItem getItem(int id) {
 		for (MItem item : items) {
 			if (item.getId() == id) {
 				return item;
 			}
 		}
-		return null;
+		return getItem(0);
 	}
 	
-	public MItem getItem(Material mat) {
-		for (MItem item : items) {
-			if (item.getMaterial() != null) {
-				if (item.getMaterial().equals(mat)) {
-					return item;
-				}
-			}
+	public MItem getItem(ItemStack check) {
+		if (new SpoutItemStack(check).isCustomItem()) {
+			return getItem(check.getDurability());
+		} else {
+			return getItem(check.getTypeId());
 		}
-		return null;
 	}
 	
 	public MItem[] getItems() {
 		return items.toArray(new MItem[items.size()]);
-	}
-	
-	public MItem getItem(ItemStack item) {
-		return getItem(item.getType());
 	}
 	
 }
