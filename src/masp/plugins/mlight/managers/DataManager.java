@@ -14,8 +14,6 @@ import masp.plugins.mlight.database.Database;
 import masp.plugins.mlight.database.MySQL;
 import masp.plugins.mlight.database.SQLite;
 
-import org.bukkit.entity.Player;
-
 public class DataManager {
 	
 	private Database database;
@@ -121,13 +119,13 @@ public class DataManager {
 		conn.close();
 	}
 	
-	public MPlayer loadPlayer(Player player) throws SQLException {
+	public MPlayer loadPlayer(MPlayer mPlayer) throws SQLException {
 		Connection conn = database.getConnection();
-		int id = getPlayerId(player.getName(), conn);
+		int id = getPlayerId(mPlayer.getName(), conn);
 		if (id == 0) {
 			PreparedStatement stmt = conn.prepareStatement(
 					"INSERT INTO `players` (owner, exp, skill_points, health, max_health) VALUES (?, ?, ?, ?, ?);");
-			stmt.setString(1, player.getName());
+			stmt.setString(1, mPlayer.getName());
 			stmt.setDouble(2, 0);
 			stmt.setInt(3, Settings.DEFAULT_SKILL_POINTS);
 			stmt.setInt(4, Settings.DEFAULT_MAX_HEALTH);
@@ -135,10 +133,9 @@ public class DataManager {
 			stmt.execute();
 			stmt.close();
 			
-			id = getPlayerId(player.getName(), conn);
+			id = getPlayerId(mPlayer.getName(), conn);
 		}
 		
-		MPlayer mPlayer = new MPlayer(player);
 		PreparedStatement stmt = conn.prepareStatement(
 				"SELECT exp,skill_points,health,max_health FROM `players` WHERE id=" + id);
 		ResultSet set = stmt.executeQuery();

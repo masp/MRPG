@@ -14,9 +14,12 @@ import masp.plugins.mlight.data.effects.types.WeaponEffect;
 import masp.plugins.mlight.data.effects.types.WeaponEffect.WeaponType;
 
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import com.google.common.base.Joiner;
@@ -173,6 +176,14 @@ public class Utils {
 		} else {
 			return  (loc.getBlockX() == loc2.getBlockX()) &&
 					(loc.getBlockZ() == loc2.getBlockZ());
+		}
+	}
+	
+	public static void printInventory(Player player) {
+		for (ItemStack item : player.getInventory().getContents()) {
+			if (item != null && item.getTypeId() != 0) {
+				player.sendMessage(ChatColor.RED + "Item Stack: " + item.getType());
+			}
 		}
 	}
 	

@@ -16,6 +16,7 @@ public class PlayerManager {
 	}
 	
 	public void addPlayer(MPlayer player) {
+		System.out.println("Added player " + player.getName());
 		if (!players.containsKey(player.getName())) {
 			players.put(player.getName(), player);
 		}

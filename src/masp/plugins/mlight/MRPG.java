@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import masp.plugins.mlight.config.Configuration;
+import masp.plugins.mlight.config.CustomItemConfiguration;
 import masp.plugins.mlight.config.DatabaseConfiguration;
 import masp.plugins.mlight.config.ItemConfiguration;
 import masp.plugins.mlight.config.MobConfiguration;
@@ -16,6 +17,7 @@ import masp.plugins.mlight.gui.GuiHandler;
 import masp.plugins.mlight.listeners.DamageListener;
 import masp.plugins.mlight.listeners.GeneralListener;
 import masp.plugins.mlight.listeners.MobListener;
+import masp.plugins.mlight.listeners.PlayerReplaceListener;
 import masp.plugins.mlight.managers.AttributeManager;
 import masp.plugins.mlight.managers.DataManager;
 import masp.plugins.mlight.managers.ItemManager;
@@ -83,12 +85,14 @@ public class MRPG extends JavaPlugin implements Listener {
 		pm.registerEvents(this, this);
 		pm.registerEvents(gHandler, this);
 		pm.registerEvents(new MobListener(), this);
+		pm.registerEvents(new PlayerReplaceListener(), this);
 		
 		// Register commands (test)
 		this.getCommand("mattr").setExecutor(commands);
 		pm.registerEvents(commands, this);
 		
 		addConfig(new ItemConfiguration(this, this.getDataFolder()));
+		addConfig(new CustomItemConfiguration(this, this.getDataFolder()));
 		addConfig(new MobConfiguration(this, this.getDataFolder()));
 		addConfig(new SkillClassConfiguration(this, this.getDataFolder()));
 		

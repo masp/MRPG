@@ -6,6 +6,7 @@ import java.io.IOException;
 import masp.plugins.mlight.MRPG;
 import masp.plugins.mlight.Settings;
 import masp.plugins.mlight.data.items.MItem;
+import masp.plugins.mlight.enums.ItemType;
 import net.minecraft.server.Item;
 import net.minecraft.server.ItemArmor;
 
@@ -47,13 +48,13 @@ public class ItemConfiguration extends Configuration {
 		for (int i = 256; i <= 385; i++) {
 			Material mat = Material.getMaterial(i);
 			if (mat == null) continue;
-			MItem item = new MItem(i, (byte) 0, false);
+			MItem item = new MItem(i, (byte) 0, ItemType.OTHER, false);
 			loadItem(item, mat.name().toLowerCase());
 			MRPG.getItemManager().addItem(item);
 		}
-		MItem fist = new MItem(0, (byte) 0, false);
+		MItem fist = new MItem(0, (byte) 0, ItemType.OTHER, false);
 		loadItem(fist, "fist");
-		MItem bow = new MItem(-1, (byte) 0, false);
+		MItem bow = new MItem(-1, (byte) 0, ItemType.OTHER, false);
 		loadItem(bow, "shot");
 		
 		MRPG.getItemManager().addItem(bow);

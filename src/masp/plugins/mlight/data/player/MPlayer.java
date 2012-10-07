@@ -1,5 +1,6 @@
 package masp.plugins.mlight.data.player;
 
+import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -11,22 +12,29 @@ import masp.plugins.mlight.Settings;
 import masp.plugins.mlight.Utils;
 import masp.plugins.mlight.data.Attribute;
 import masp.plugins.mlight.data.Damageable;
+import masp.plugins.mlight.data.MPlayerInventory;
 import masp.plugins.mlight.data.effects.EffectCollection;
 import masp.plugins.mlight.data.effects.EffectManager;
 import masp.plugins.mlight.data.effects.Effected;
 import masp.plugins.mlight.data.effects.types.MEffect;
 import masp.plugins.mlight.data.items.MItem;
 import masp.plugins.mlight.gui.menus.PlayerHud;
+import net.minecraft.server.ContainerPlayer;
+import net.minecraft.server.Entity;
+import net.minecraft.server.EntityPlayer;
 import net.minecraft.server.Packet18ArmAnimation;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.getspout.spout.inventory.SpoutCraftingInventory;
+import org.getspout.spout.player.SpoutCraftPlayer;
 import org.getspout.spoutapi.SpoutManager;
 import org.getspout.spoutapi.gui.Color;
 import org.getspout.spoutapi.gui.GenericLabel;
@@ -34,7 +42,7 @@ import org.getspout.spoutapi.gui.Label;
 import org.getspout.spoutapi.gui.WidgetAnchor;
 import org.getspout.spoutapi.player.SpoutPlayer;
 
-public class MPlayer implements Effected, EffectCollection, Damageable {
+public class MPlayer extends SpoutCraftPlayer implements Effected, EffectCollection, Damageable {
 	
 	private String name;
 	
@@ -42,8 +50,6 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 	
 	private int maxHealth;
 	private int health;
-	
-	private ArmorParticipant armor;
 	
 	private int skillPoints;
 	
@@ -55,17 +61,20 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 	private Label dangerLabel;
 	private int dangerLevel;
 	
+	private MPlayerInventory inventory;
+	
 	private transient UUID selectedMob;
 	
 	private Map<Attribute, Integer> skills = new LinkedHashMap<Attribute, Integer>();
 	
-	public MPlayer(Player player) {
+	public MPlayer(CraftServer server, EntityPlayer vPlayer) {
+		super(server, vPlayer);
+		CraftPlayer player = vPlayer.netServerHandler.getPlayer();
 		this.name = player.getName();
 		this.health = Settings.DEFAULT_MAX_HEALTH;
 		this.maxHealth = Settings.DEFAULT_MAX_HEALTH;
 		this.exp = 0D;
 		dangerLabel = new GenericLabel();
-		armor = new ArmorParticipant(player.getName());
 		
 		if (getPlayer() != null) {
 			setDangerLevel(Utils.getDanger(player.getWorld(), player.getLocation().getBlockX(), player.getLocation().getBlockZ()));
@@ -76,16 +85,52 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 		}
 	}
 	
+	public static boolean updateBukkitEntity(Player player) {
+		if (!(player instanceof MPlayer)) {
+			CraftPlayer cp = (CraftPlayer) player;
+			EntityPlayer ep = cp.getHandle();
+			return updateBukkitEntity(ep);
+		}
+		return false;
+	}
+	
+	public static boolean updateBukkitEntity(EntityPlayer ep) {
+		Field bukkitEntity;
+		try {
+			bukkitEntity = Entity.class.getDeclaredField("bukkitEntity");
+			bukkitEntity.setAccessible(true);
+			org.bukkit.entity.Entity e = (org.bukkit.entity.Entity) bukkitEntity.get(ep);
+			System.out.println("Entity not Null: " + (ep.getName() != null));
+			System.out.println("Server not Null: " + ((CraftServer) Bukkit.getServer() != null));
+			if (e == null || !e.getClass().equals(MPlayer.class)) {
+				bukkitEntity.set(ep, new MPlayer((CraftServer) Bukkit.getServer(), ep));
+			}
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	public static MPlayer getPlayer(Player player) {
+		if (player instanceof MPlayer) {
+			return (MPlayer) player;
+		}
+		if ((((CraftPlayer) player).getHandle()).getBukkitEntity() instanceof MPlayer) {
+			return (MPlayer) ((((CraftPlayer) player).getHandle()).getBukkitEntity());
+		}
+		// We should never get here
+		//Logger.getLogger("Minecraft").warning("Player: " + player.getName() + " was not properly updated during login!");
+		updateBukkitEntity(player);
+		return (MPlayer) ((((CraftPlayer) player).getHandle()).getBukkitEntity());
+	}
+	
 	public void setSelectedMob(UUID id) {
 		this.selectedMob = id;
 	}
 	
 	public UUID getSelectedMob() {
 		return selectedMob;
-	}
-	
-	public ArmorParticipant getArmor() {
-		return armor;
 	}
 	
 	public Set<Attribute> getSkills() {
@@ -279,7 +324,7 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 			skills += sClass.getTotalEffectsPercent(effect) * getSkillValue(sClass.getName());
 		}
 		
-		return skills + getPrimaryWeapon().getTotalEffectsPercent(effect) + getArmor().getTotalEffectsPercent(effect);
+		return skills + getPrimaryWeapon().getTotalEffectsPercent(effect) + getInventory().getTotalEffectsPercent(effect);
 	}
 
 	@Override
@@ -289,7 +334,7 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 			skills += sClass.getTotalEffectsDecimal(effect) * getSkillValue(sClass.getName());
 		}
 		
-		return skills + getPrimaryWeapon().getTotalEffectsDecimal(effect) + getArmor().getTotalEffectsDecimal(effect);
+		return skills + getPrimaryWeapon().getTotalEffectsDecimal(effect) + getInventory().getTotalEffectsDecimal(effect);
 	}
 
 	@Override
@@ -299,8 +344,33 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 			effects.addAll(sClass.getEffects());
 		}
 		effects.addAll(getPrimaryWeapon().getEffects());
-		effects.addAll(getArmor().getEffects());
+		effects.addAll(getInventory().getEffects());
 		return effects;
+	}
+	
+	@Override
+	public MPlayerInventory getInventory() {
+		if (this.inventory == null) {
+			createInventory(null);
+		} else if (!(this.inventory).getHandle().equals(this.getHandle().inventory)) {
+			createInventory(this.inventory.getName());
+		}
+		return this.inventory;
+	}
+	
+	@Override
+	public void createInventory(String name) {
+		if (this.getHandle().activeContainer instanceof ContainerPlayer) {
+			this.inventory = new MPlayerInventory(this, this.getHandle().inventory, new SpoutCraftingInventory(((ContainerPlayer) this.getHandle().activeContainer).craftInventory, ((ContainerPlayer) this.getHandle().activeContainer).resultInventory));
+			if (name != null) {
+				this.inventory.setName(name);
+			}
+		} else {
+			this.inventory = new MPlayerInventory(this, this.getHandle().inventory, new SpoutCraftingInventory(((ContainerPlayer) this.getHandle().defaultContainer).craftInventory, ((ContainerPlayer) this.getHandle().defaultContainer).resultInventory));
+			if (name != null) {
+				this.inventory.setName(name);
+			}
+		}
 	}
 
 	public int getDangerLevel() {
