@@ -33,6 +33,8 @@ public class MCustomInventory extends InventoryGui {
 		addSlot(new ArmorSlot(armorX + 36, armorY + 18, this, player, ItemType.EARRING, 1));
 		addSlot(new ArmorSlot(armorX + 36, armorY + (18 * 2), this, player, ItemType.RING, 0));
 		addSlot(new ArmorSlot(armorX + 36, armorY + (18 * 3), this, player, ItemType.RING, 1));
+		
+		// Added something :)
 	}
 
 	@Override
