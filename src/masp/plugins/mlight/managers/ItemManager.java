@@ -3,6 +3,7 @@ package masp.plugins.mlight.managers;
 import java.util.ArrayList;
 import java.util.List;
 
+import masp.plugins.mlight.data.items.ExpBag;
 import masp.plugins.mlight.data.items.MItem;
 
 import org.bukkit.inventory.ItemStack;
@@ -12,8 +13,16 @@ public class ItemManager {
 	
 	private List<MItem> items;
 	
+	private ExpBag bag;
+	
 	public ItemManager() {
 		items = new ArrayList<MItem>();
+		
+		bag = new ExpBag();
+	}
+	
+	public ExpBag getBag() {
+		return bag;
 	}
 	
 	public void addItem(MItem item) {

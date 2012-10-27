@@ -4,9 +4,9 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import masp.plugins.mlight.Settings;
-import masp.plugins.mlight.Utils;
 import masp.plugins.mlight.data.mobs.MDangerMob;
 import masp.plugins.mlight.data.mobs.ai.PathfinderGoalMSwell;
+import masp.plugins.mlight.utils.Utils;
 import net.minecraft.server.Entity;
 import net.minecraft.server.EntityCreeper;
 import net.minecraft.server.EntityHuman;

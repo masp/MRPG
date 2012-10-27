@@ -1,7 +1,7 @@
 package masp.plugins.mlight.data.mobs.mobwrappers.hostile;
 
-import masp.plugins.mlight.Utils;
 import masp.plugins.mlight.data.mobs.MDangerMob;
+import masp.plugins.mlight.utils.Utils;
 import net.minecraft.server.EntityMagmaCube;
 import net.minecraft.server.World;
 

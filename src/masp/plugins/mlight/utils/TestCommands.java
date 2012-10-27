@@ -1,5 +1,6 @@
-package masp.plugins.mlight;
+package masp.plugins.mlight.utils;
 
+import masp.plugins.mlight.MRPG;
 import masp.plugins.mlight.data.effects.EffectCollection;
 import masp.plugins.mlight.data.effects.types.MEffect;
 import masp.plugins.mlight.data.player.MPlayer;
@@ -45,6 +46,17 @@ public class TestCommands implements CommandExecutor, Listener {
 				} else {
 					player.sendMessage(ChatColor.RED + "Please right click a mob before you use this command");
 				}
+				return true;
+			} else if (label.equalsIgnoreCase("effects")) {
+				player.sendMessage(ChatColor.RED + "--- Attack Effects ---");
+				for (MEffect effect : player.getPrimaryWeapon().getAttack().getEffects()) {
+					player.sendMessage(ChatColor.RED + effect.toString() + ": " + player.getPrimaryWeapon().getAttack().getTotalEffects(effect));
+				}
+				player.sendMessage(ChatColor.RED + "--- Defense Effects ---");
+				for (MEffect effect : player.getPrimaryWeapon().getDefense().getEffects()) {
+					player.sendMessage(ChatColor.RED + effect.toString() + ": " + player.getPrimaryWeapon().getDefense().getTotalEffects(effect));
+				}
+				player.sendMessage(ChatColor.RED + "-- End of Effects --");
 				return true;
 			}
 		}

@@ -78,6 +78,7 @@ public class MobConfiguration extends Configuration {
 		for (EntityType type : EntityType.values()) {
 			if (type.isAlive() && !(type.name().equalsIgnoreCase("player"))) {
 				getConfig().set("mobs." + type.name().toLowerCase() + ".max-health", mobHealths.get(type.name()) * 5);
+				getConfig().set("mobs." + type.name().toLowerCase() + ".exp", Math.min(20, mobHealths.get(type.name())));
 				getConfig().set("mobs." + type.name().toLowerCase() + ".effects.general_damage", mobDamages.get(type.name()) * 5);
 			}
 		}
@@ -92,7 +93,10 @@ public class MobConfiguration extends Configuration {
 	public void onRead() {
 		for (EntityType type : EntityType.values()) {
 			if (type.isAlive() && !(type.name().equalsIgnoreCase("player"))) {
-				MCreature creature = new MCreature(type, getConfig().getInt("mobs." + type.name().toLowerCase() + ".max-health",  mobHealths.get(type.name()) * 5));
+				MCreature creature = new MCreature(type, 
+						getConfig().getInt("mobs." + type.name().toLowerCase() + ".max-health",  
+						mobHealths.get(type.name()) * 5),
+						getConfig().getInt("mobs." + type.name().toLowerCase() + ".exp"));
 				MRPG.getMobManager().addCreature(creature);
 				/*
 				 * Add the effects

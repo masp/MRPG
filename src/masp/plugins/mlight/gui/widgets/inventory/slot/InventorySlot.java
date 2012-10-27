@@ -1,4 +1,6 @@
-package masp.plugins.mlight.gui.widgets.inventory;
+package masp.plugins.mlight.gui.widgets.inventory.slot;
+
+import masp.plugins.mlight.gui.widgets.inventory.InventoryGui;
 
 import org.bukkit.inventory.ItemStack;
 import org.getspout.spoutapi.gui.GenericSlot;

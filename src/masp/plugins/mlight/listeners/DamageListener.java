@@ -1,16 +1,17 @@
 package masp.plugins.mlight.listeners;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import masp.plugins.mlight.MRPG;
 import masp.plugins.mlight.Settings;
-import masp.plugins.mlight.Utils;
 import masp.plugins.mlight.data.Damageable;
 import masp.plugins.mlight.data.MCreature;
 import masp.plugins.mlight.data.effects.EffectCollection;
 import masp.plugins.mlight.data.player.MPlayer;
+import masp.plugins.mlight.utils.Utils;
 
-import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Fireball;
 import org.bukkit.entity.LivingEntity;
@@ -26,12 +27,20 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
+import org.getspout.spoutapi.gui.Color;
+import org.getspout.spoutapi.gui.GenericLabel;
 
 public class DamageListener implements Listener {
 	
-	@EventHandler(priority = EventPriority.HIGHEST)
+	@EventHandler(priority = EventPriority.HIGH)
 	public void handleCustomDamage(EntityDamageEvent event) {
 		if (event.getEntity().isDead()) return;
+		
+		if (event.getEntity() instanceof Player) {
+			if (((Player) event.getEntity()).getGameMode() == GameMode.CREATIVE) {
+				return;
+			}
+		}
 		
 		event.setCancelled(true);
 		if (event instanceof EntityDamageByEntityEvent) {
@@ -99,13 +108,23 @@ public class DamageListener implements Listener {
 		if (System.currentTimeMillis() - attacker.getLastAttack() >= Settings.DEFAULT_ATTACK_SPEED) {
 			attacker.setLastAttack(System.currentTimeMillis());
 			int totalWeaponDamage = Utils.getTotalDamage(attacker, defender);
+			
+			// Check for stamina
+			if (((float) attacker.getStamina() / (float) attacker.getMaxStamina()) * 100.f <= Settings.STAMINA_DAMAGE_DECREASE_LIMIT) {
+				totalWeaponDamage -= Math.floor((Settings.STAMINA_DAMAGE_DECREASE / 100.f) * (float) totalWeaponDamage); 
+			}
+			
 			if (totalWeaponDamage <= 0) {
-				attacker.sendMessage(ChatColor.RED + "Miss!");
+				attacker.displayNotification(new GenericLabel("Miss!").setTextColor(new Color(1.f, 0f, 0f)));
+				defender.displaySideNotification(new GenericLabel("Blocked!").setTextColor(new Color(0, 232, 0)));
 				return;
 			}
-			attacker.getPlayer().sendMessage(ChatColor.BLUE + "You dealt " + ChatColor.GREEN + totalWeaponDamage + ChatColor.BLUE + " damage!");
+			attacker.displayNotification(new GenericLabel("-" + totalWeaponDamage).setTextColor(new Color(0.9f, 0.f, 0.f)));
 			defender.damage(totalWeaponDamage, attacker.getPlayer());
+			if (defender.getPlayer().isDead()) return;
 			Utils.knockback(attacker, attacker.getPlayer(), defender.getPlayer());
+			attacker.setStamina(attacker.getStamina() - Settings.STAMINA_HIT_LOSS);
+			defender.setStamina(defender.getStamina() - Settings.STAMINA_DAMAGED_LOSS);
 		}
 	}
 	
@@ -115,13 +134,20 @@ public class DamageListener implements Listener {
 			MCreature creature = MRPG.getMobManager().getCreature(defender.getType().name());
 			EffectCollection effects = MRPG.getMobManager().getCreatureEffects(defender);
 			int totalWeaponDamage = Utils.getTotalDamage(attacker, effects);
+			
+			// Check for stamina
+			if (((float) attacker.getStamina() / (float) attacker.getMaxStamina()) * 100.f <= Settings.STAMINA_DAMAGE_DECREASE_LIMIT) {
+				totalWeaponDamage -= Math.floor((Settings.STAMINA_DAMAGE_DECREASE / 100.f) * (float) totalWeaponDamage); 
+			}
+			
 			if (totalWeaponDamage <= 0) {
-				attacker.sendMessage(ChatColor.RED + "Miss!");
+				attacker.displayNotification(new GenericLabel("Miss!").setTextColor(new Color(1.f, 0f, 0f)));
 				return;
 			}
-			attacker.getPlayer().sendMessage(ChatColor.BLUE + "You dealt " + ChatColor.GREEN + totalWeaponDamage + ChatColor.BLUE + " damage!");
+			attacker.displayNotification(new GenericLabel("-" + totalWeaponDamage).setTextColor(new Color(0.9f, 0.f, 0.f)));
 			// Replicate the damage
 			creature.damage(totalWeaponDamage, attacker.getPlayer(), defender);
+			attacker.setStamina(attacker.getStamina() - Settings.STAMINA_HIT_LOSS);
 		}
 	}
 	
@@ -132,7 +158,7 @@ public class DamageListener implements Listener {
 			Slime slime = (Slime) attacker;
 			// Remove damage if the slime is 0, well, remove it as much as default configured.
 			if (slime.getSize() == 1) {
-				totalDamage -= Settings.CONVERSION_FACTOR;
+				totalDamage -= Settings.HEALTH_CONVERSION;
 			} else {
 				// Slime is size 4, 20 damage which is equal to 2 hearts, size if small/2, damage is 10, which is equal to one heart.
 				totalDamage *= slime.getSize();
@@ -144,11 +170,14 @@ public class DamageListener implements Listener {
 		}
 		
 		if (totalDamage <= 0) {
+			defender.displaySideNotification(new GenericLabel("Blocked!").setTextColor(new Color(0, 232, 0)));
 			return;
 		}
 		
 		defender.damage(totalDamage, defender.getPlayer());
+		if (defender.getPlayer().isDead()) return;
 		Utils.knockback(effects, attacker, defender.getPlayer());
+		defender.setStamina(defender.getStamina() - Settings.STAMINA_DAMAGED_LOSS);
 	}
 	
 	public void handleEntityAttackEntity(LivingEntity attacker, LivingEntity defender) {
@@ -171,30 +200,54 @@ public class DamageListener implements Listener {
 	 */
 	public void handlePlayerShootPlayer(MPlayer attacker, MPlayer defender, Arrow shot) {
 		shot.remove();
+		List<EffectCollection> parts = new ArrayList<EffectCollection>(attacker.getSkills());
+		parts.add(attacker.getInventory());
 		int totalDamage = Utils.getTotalDamage(MRPG.getItemManager().getItem(-1).getAttack(), 
 				defender, 
-				new ArrayList<EffectCollection>(attacker.getSkills()));
+				parts);
+		
+		// Check for stamina
+		if (((float) attacker.getStamina() / (float) attacker.getMaxStamina()) * 100.f <= Settings.STAMINA_DAMAGE_DECREASE_LIMIT) {
+			totalDamage -= Math.floor((Settings.STAMINA_DAMAGE_DECREASE / 100.f) * (float) totalDamage); 
+		}
+		
 		if (totalDamage <= 0) {
-			attacker.sendMessage(ChatColor.RED + "Miss!");
+			attacker.displayNotification(new GenericLabel("Miss!").setTextColor(new Color(1.f, 0f, 0f)));
 			return;
 		}
-		attacker.getPlayer().sendMessage(ChatColor.BLUE + "You dealt " + ChatColor.GREEN + totalDamage + ChatColor.BLUE + " damage!");
+		attacker.displayNotification(new GenericLabel("-" + totalDamage).setTextColor(new Color(0.9f, 0.f, 0.f)));
 		defender.damage(totalDamage, defender.getPlayer());
+		
+		if (defender.getPlayer().isDead()) return;
+		
+		attacker.setStamina(attacker.getStamina() - Settings.STAMINA_HIT_LOSS);
+		defender.setStamina(defender.getStamina() - Settings.STAMINA_DAMAGED_LOSS);
 	}
 	
 	public void handlePlayerShootEntity(MPlayer attacker, LivingEntity defender, Arrow shot) {
 		shot.remove();
+		
 		MCreature cDefender = MRPG.getMobManager().getCreature(defender.getType().name());
 		EffectCollection effects = MRPG.getMobManager().getCreatureEffects(defender);
+		List<EffectCollection> parts = new ArrayList<EffectCollection>(attacker.getSkills());
+		parts.add(attacker.getInventory());
 		int totalDamage = Utils.getTotalDamage(MRPG.getItemManager().getItem(-1).getAttack(), 
-				effects,
-				new ArrayList<EffectCollection>(attacker.getSkills()));
+				effects, 
+				parts);
+		
+		// Check for stamina
+		if (((float) attacker.getStamina() / (float) attacker.getMaxStamina()) * 100.f <= Settings.STAMINA_DAMAGE_DECREASE_LIMIT) {
+			totalDamage -= Math.floor((Settings.STAMINA_DAMAGE_DECREASE / 100.f) * (float) totalDamage); 
+		}
+		
 		if (totalDamage <= 0) {
-			attacker.sendMessage(ChatColor.RED + "Miss!");
+			attacker.displayNotification(new GenericLabel("Miss!").setTextColor(new Color(1.f, 0f, 0f)));
 			return;
 		}
-		attacker.getPlayer().sendMessage(ChatColor.BLUE + "You dealt " + ChatColor.GREEN + totalDamage + ChatColor.BLUE + " damage!");
+		attacker.displayNotification(new GenericLabel("-" + totalDamage).setTextColor(new Color(0.9f, 0.f, 0.f)));
 		cDefender.damage(totalDamage, attacker.getPlayer(), defender);
+		
+		attacker.setStamina(attacker.getStamina() - Settings.STAMINA_HIT_LOSS);
 	}
 	
 	public void handleEntityShootPlayer(LivingEntity attacker, MPlayer defender, Arrow shot) {
@@ -202,9 +255,13 @@ public class DamageListener implements Listener {
 		EffectCollection effects = MRPG.getMobManager().getCreatureEffects(attacker);
 		int totalDamage = Utils.getTotalDamage(effects, defender);
 		if (totalDamage <= 0) {
+			defender.displaySideNotification(new GenericLabel("Blocked!").setTextColor(new Color(0, 232, 0)));
 			return;
 		}
 		defender.damage(totalDamage, defender.getPlayer());
+		if (defender.getPlayer().isDead()) return;
+		
+		defender.setStamina(defender.getStamina() - Settings.STAMINA_DAMAGED_LOSS);
 	}
 	
 	public void handleEntityShootEntity(LivingEntity attacker, LivingEntity defender, Arrow shot) {

@@ -26,6 +26,7 @@ public class CustomItemConfiguration extends Configuration {
 		config.set("custom-items.example-item.type", "RING, CAPE, BELT, HELMET, CHESTPLATE, LEGGINGS, BOOT, EARRING, AMULET, BADGE, OTHER");
 		config.set("custom-items.example-item.badge.player-title", ChatColor.RED.toString() + "[Red Title Here]");
 		config.set("custom-items.example-item.badge.chat-title", ChatColor.RED + "[Red Chat Title Here]");
+		config.set("custom-items.example-item.cape.url", "http://www.capeurlhere.com");
 		config.set("custom-items.example-item.attack-effects.decimal.general_damage", "your general damage");
 		config.set("custom-items.example-item.defense-effects.decimal.general_resistance", "your general resistance");
 		
@@ -47,12 +48,16 @@ public class CustomItemConfiguration extends Configuration {
 					ItemType type = ItemType.getItemType(config.getString(path + ".type", "other"));
 					MItem mItem = new MItem(item.getCustomId(), (byte) 0, type, true);
 					loadItem(mItem, itemName);
+					MItemData data = mItem.getMData();
 					if (type == ItemType.BADGE) {
-						MItemData data = mItem.getMData();
 						data.addString("badge-chat-title", config.getString(path + ".badge.chat-title", "[" + item.getName() + "]"));
-						data.addString("badge-player-title", config.getString(path + "badge.player-title", "[" + item.getName() + "]"));
+						data.addString("badge-player-title", config.getString(path + ".badge.player-title", "[" + item.getName() + "]"));
+					} else if (type == ItemType.CAPE) {
+						data.addString("cape-url", config.getString(path + ".cape.url", ""));
 					}
 					MRPG.getItemManager().addItem(mItem);
+				} else {
+					MRPG.getInstance().getLogger().warning("Configuration Error: No custom item found by the name " + config.getString("custom-items." + itemName + ".name"));
 				}
 			}
 		}

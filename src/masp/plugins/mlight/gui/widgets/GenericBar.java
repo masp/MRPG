@@ -14,6 +14,7 @@ public class GenericBar extends GenericContainer implements Bar {
 	private float currValue;
 	
 	private BarGradient gradient;
+	private BarGradient bgGradient;
 	
 	private Label text;
 	
@@ -30,6 +31,7 @@ public class GenericBar extends GenericContainer implements Bar {
 		text = new GenericLabel();
 		
 		gradient = new BarGradient(this);
+		bgGradient = new BarGradient(this);
 		
 		this.maxValue = maxValue;
 		this.currValue = currValue;
@@ -42,6 +44,18 @@ public class GenericBar extends GenericContainer implements Bar {
 		gradient.setFixed(true)
 			.setWidth(getWidth())
 			.setHeight(getHeight());
+		
+		bgGradient.setFixed(true)
+				  .setWidth(getWidth())
+				  .setHeight(getHeight())
+				  .setPriority(RenderPriority.Highest);
+		
+		bgGradient.setBottomColor(
+						gradient.getBottomColor().clone().setAlpha(0.3f)
+				  )
+				  .setTopColor(
+						gradient.getTopColor().clone().setAlpha(0.3f)
+				  );
 
 		gradient.setFixed(true)
 			.setPriority(RenderPriority.High);
@@ -49,9 +63,11 @@ public class GenericBar extends GenericContainer implements Bar {
 		scale = (float) getHeight() / 10f;
 		text.setScale(scale);
 		
+		
+		
 		this.updateBar();
 
-		addChildren(gradient, text);
+		addChildren(gradient,bgGradient, text);
 	}
 	
 	public GenericBar(int maxValue) {

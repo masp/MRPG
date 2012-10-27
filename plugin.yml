@@ -2,6 +2,7 @@ name: MRPG
 author: Denkfaehigkeit
 version: 0.1
 main: masp.plugins.mlight.MRPG
+depend: [Spout, MoreMaterials]
 commands:
    m:
      description: Basic MRPG Light commands
@@ -18,3 +19,6 @@ commands:
    mattr:
      description: Test command
      usage: /mattr [effect] [amount]
+   effects:
+     description: Test command
+     usage: /effects

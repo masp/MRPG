@@ -3,10 +3,11 @@ package masp.plugins.mlight.listeners;
 import java.sql.SQLException;
 
 import masp.plugins.mlight.MRPG;
-import masp.plugins.mlight.Utils;
+import masp.plugins.mlight.Settings;
 import masp.plugins.mlight.data.Attribute;
 import masp.plugins.mlight.data.items.MItem;
 import masp.plugins.mlight.data.player.MPlayer;
+import masp.plugins.mlight.utils.Utils;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -14,8 +15,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -28,21 +29,25 @@ public class GeneralListener implements Listener {
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerJoin(final SpoutCraftEnableEvent event) {
-		MPlayer player = MRPG.getPlayer(event.getPlayer());
-		System.out.println("REACHED PLAYER NULL " + (player != null));
-		for (int i = 36; i < 40; i++) {
-			ItemStack armor = player.getInventory().getItem(i) == null ? 
-					new ItemStack(Material.AIR, 1) : player.getInventory().getItem(i); 
-			MItem item = MRPG.getItemManager().getItem(armor);
-			player.getInventory().setItem(i, null);
-				player.onEffected(item);
-			player.getInventory().setItem(i, armor);
+		try {
+			MPlayer player = MRPG.getDataManager().loadPlayer(event.getPlayer());
+			MRPG.getPlayerManager().addPlayer(player);
+			for (int i = 36; i < 40; i++) {
+				ItemStack armor = player.getPlayer().getInventory().getItem(i) == null ? 
+						new ItemStack(Material.AIR, 1) : player.getPlayer().getInventory().getItem(i); 
+				MItem item = MRPG.getItemManager().getItem(armor);
+				player.getPlayer().getInventory().setItem(i, null);
+					player.onEffected(item);
+				player.getPlayer().getInventory().setItem(i, armor);
+			}
+			player.onEffected(MRPG.getItemManager().getItem(player.getPlayer().getItemInHand()));
+			for (Attribute sClass : player.getSkills()) {
+				player.onEffected(sClass);
+			}
+			player.setSkillPoints(999);
+		} catch (SQLException ex) {
+			ex.printStackTrace();
 		}
-		player.onEffected(MRPG.getItemManager().getItem(player.getItemInHand()));
-		for (Attribute sClass : player.getSkills()) {
-			player.onEffected(sClass);
-		}
-		player.setSkillPoints(999);
 	}
 	
 	@EventHandler
@@ -53,6 +58,21 @@ public class GeneralListener implements Listener {
 		} catch (SQLException ex) {
 			ex.printStackTrace();
 		}
+	}
+	
+	@EventHandler
+	public void onHunger(FoodLevelChangeEvent event) {
+		MPlayer player = MRPG.getPlayer(event.getEntity().getName());
+		// If it's a decrease
+		int change = (event.getFoodLevel() - player.getPlayer().getFoodLevel()) * Settings.STAMINA_CONVERSION;
+		if (player.getStamina() + change < 0) {
+			player.setStamina(0);
+		} else if (player.getStamina() + change > player.getMaxStamina()) {
+			player.setStamina(player.getMaxStamina());
+		} else {
+			player.setStamina(player.getStamina() + change);
+		}
+		event.setCancelled(true);
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -84,10 +104,5 @@ public class GeneralListener implements Listener {
 				mPlayer.onEffected(MRPG.getItemManager().getItem(event.getCursor()).getDefense());
 			}
 		}
-	}
-	
-	@EventHandler(priority = EventPriority.HIGHEST)
-	public void onInventoryOpen(InventoryOpenEvent event) {
-		MRPG.getInstance().getLogger().info("REACHED");
 	}
 }

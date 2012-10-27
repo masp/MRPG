@@ -1,8 +1,8 @@
 package masp.plugins.mlight.data.mobs.mobwrappers.hostile;
 
 import masp.plugins.mlight.Settings;
-import masp.plugins.mlight.Utils;
 import masp.plugins.mlight.data.mobs.MDangerMob;
+import masp.plugins.mlight.utils.Utils;
 import net.minecraft.server.Entity;
 import net.minecraft.server.EntityEnderman;
 import net.minecraft.server.World;

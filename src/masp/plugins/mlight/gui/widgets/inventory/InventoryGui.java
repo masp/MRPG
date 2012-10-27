@@ -4,6 +4,9 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
+import masp.plugins.mlight.MRPG;
+import masp.plugins.mlight.gui.widgets.inventory.slot.InventorySlot;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.HumanEntity;
@@ -62,13 +65,15 @@ public abstract class InventoryGui extends InventoryView {
 		cont.addChild(getBackground().setPriority(RenderPriority.High));
 		for(int i = 0; i < slots.size(); i++) cont.addChild(slots.get(i));
 		for(Widget w : getWidgets()) cont.addChild(w);
-		sp.getMainScreen().attachPopupScreen((PopupScreen) new GenericPopup() {
+		PopupScreen pop = (PopupScreen) new GenericPopup() {
 			@Override
 			public void handleItemOnCursor(ItemStack is) {
 				if(is.getTypeId() == 0 || is.getAmount() == 0) return;
 				eject(is);
 			}
-		});
+		};
+		pop.attachWidget(MRPG.getInstance(), cont);
+		sp.getMainScreen().attachPopupScreen(pop);
 		return true;
 	}
 

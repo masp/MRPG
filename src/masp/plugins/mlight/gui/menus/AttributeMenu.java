@@ -6,13 +6,13 @@ import java.util.List;
 import java.util.Set;
 
 import masp.plugins.mlight.MRPG;
-import masp.plugins.mlight.Utils;
 import masp.plugins.mlight.data.Attribute;
 import masp.plugins.mlight.data.effects.types.MEffect;
 import masp.plugins.mlight.data.player.MPlayer;
 import masp.plugins.mlight.gui.widgets.AttributeAddButton;
 import masp.plugins.mlight.gui.widgets.AttributeListItemWidget;
 import masp.plugins.mlight.gui.widgets.AttributeListWidget;
+import masp.plugins.mlight.utils.Utils;
 
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.ChatColor;

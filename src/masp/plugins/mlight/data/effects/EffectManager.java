@@ -18,6 +18,10 @@ public class EffectManager {
 			ITEM_WEIGHT = "ITEM_WEIGHT",
 			MAX_ITEM_WEIGHT = "MAX_ITEM_WEIGHT",
 			HEALTH = "HEALTH",
+			MANA = "MANA",
+			STAMINA = "STAMINA",
+			STAMINA_HIT_EFFICIENCY = "STAMINA_HIT_EFFICIENCY",
+			STAMINA_DAMAGE_EFFICIENCY = "STAMINA_DAMAGE_EFFICIENCY",
 			CRITICAL_HIT_CHANCE = "CRITICAL_HIT_CHANCE",
 			BLOCKING_CHANCE = "BLOCKING_CHANCE",
 			HEALTH_REGEN_AMOUNT = "HEALTH_REGEN_AMOUNT",
@@ -37,6 +41,10 @@ public class EffectManager {
 		effects.add(new MEffect(SWIM_SPEED));
 		effects.add(new MEffect(JUMP_HEIGHT));
 		effects.add(new MEffect(JUMP_DISTANCE));
+		effects.add(new MEffect(MANA));
+		effects.add(new MEffect(STAMINA));
+		effects.add(new MEffect(STAMINA_HIT_EFFICIENCY));
+		effects.add(new MEffect(STAMINA_DAMAGE_EFFICIENCY));
 		DefenseResistEffect general = new DefenseResistEffect("GENERAL");
 		effects.add(general.getDamage());
 		effects.add(general.getResist());

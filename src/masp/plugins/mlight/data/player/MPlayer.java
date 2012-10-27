@@ -1,6 +1,5 @@
 package masp.plugins.mlight.data.player;
 
-import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -9,7 +8,6 @@ import java.util.UUID;
 
 import masp.plugins.mlight.MRPG;
 import masp.plugins.mlight.Settings;
-import masp.plugins.mlight.Utils;
 import masp.plugins.mlight.data.Attribute;
 import masp.plugins.mlight.data.Damageable;
 import masp.plugins.mlight.data.MPlayerInventory;
@@ -19,30 +17,26 @@ import masp.plugins.mlight.data.effects.Effected;
 import masp.plugins.mlight.data.effects.types.MEffect;
 import masp.plugins.mlight.data.items.MItem;
 import masp.plugins.mlight.gui.menus.PlayerHud;
-import net.minecraft.server.ContainerPlayer;
-import net.minecraft.server.Entity;
-import net.minecraft.server.EntityPlayer;
+import masp.plugins.mlight.utils.Utils;
 import net.minecraft.server.Packet18ArmAnimation;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.getspout.spout.inventory.SpoutCraftingInventory;
-import org.getspout.spout.player.SpoutCraftPlayer;
 import org.getspout.spoutapi.SpoutManager;
 import org.getspout.spoutapi.gui.Color;
 import org.getspout.spoutapi.gui.GenericLabel;
 import org.getspout.spoutapi.gui.Label;
 import org.getspout.spoutapi.gui.WidgetAnchor;
+import org.getspout.spoutapi.gui.WidgetAnim;
 import org.getspout.spoutapi.player.SpoutPlayer;
 
-public class MPlayer extends SpoutCraftPlayer implements Effected, EffectCollection, Damageable {
+public class MPlayer implements Effected, EffectCollection, Damageable {
 	
 	private String name;
 	
@@ -51,28 +45,39 @@ public class MPlayer extends SpoutCraftPlayer implements Effected, EffectCollect
 	private int maxHealth;
 	private int health;
 	
+	private int maxMana;
+	private int mana;
+	
+	private int maxStamina;
+	private int stamina;
+	
 	private int skillPoints;
 	
 	private double expRate = Settings.EXP_RATE;
 	private double exp;
 	
-	private PlayerHud hud;
+	private transient PlayerHud hud;
 	
-	private Label dangerLabel;
-	private int dangerLevel;
+	private transient Label dangerLabel;
+	private transient int dangerLevel;
 	
 	private MPlayerInventory inventory;
 	
 	private transient UUID selectedMob;
 	
-	private Map<Attribute, Integer> skills = new LinkedHashMap<Attribute, Integer>();
+	private Map<Attribute, Integer> attributes = new LinkedHashMap<Attribute, Integer>();
 	
-	public MPlayer(CraftServer server, EntityPlayer vPlayer) {
-		super(server, vPlayer);
-		CraftPlayer player = vPlayer.netServerHandler.getPlayer();
+	public MPlayer(Player player) {
 		this.name = player.getName();
+		
 		this.health = Settings.DEFAULT_MAX_HEALTH;
+		this.mana = Settings.DEFAULT_MAX_MANA;
+		this.stamina = Settings.DEFAULT_MAX_STAMINA;
+		
 		this.maxHealth = Settings.DEFAULT_MAX_HEALTH;
+		this.maxMana = Settings.DEFAULT_MAX_MANA;
+		this.maxStamina = Settings.DEFAULT_MAX_STAMINA;
+		
 		this.exp = 0D;
 		dangerLabel = new GenericLabel();
 		
@@ -81,48 +86,10 @@ public class MPlayer extends SpoutCraftPlayer implements Effected, EffectCollect
 		}
 		
 		for (Attribute sClass : MRPG.getAttributeManager().getSkills()) {
-			skills.put(sClass, 0);
+			attributes.put(sClass, 0);
 		}
-	}
-	
-	public static boolean updateBukkitEntity(Player player) {
-		if (!(player instanceof MPlayer)) {
-			CraftPlayer cp = (CraftPlayer) player;
-			EntityPlayer ep = cp.getHandle();
-			return updateBukkitEntity(ep);
-		}
-		return false;
-	}
-	
-	public static boolean updateBukkitEntity(EntityPlayer ep) {
-		Field bukkitEntity;
-		try {
-			bukkitEntity = Entity.class.getDeclaredField("bukkitEntity");
-			bukkitEntity.setAccessible(true);
-			org.bukkit.entity.Entity e = (org.bukkit.entity.Entity) bukkitEntity.get(ep);
-			System.out.println("Entity not Null: " + (ep.getName() != null));
-			System.out.println("Server not Null: " + ((CraftServer) Bukkit.getServer() != null));
-			if (e == null || !e.getClass().equals(MPlayer.class)) {
-				bukkitEntity.set(ep, new MPlayer((CraftServer) Bukkit.getServer(), ep));
-			}
-			return true;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-	
-	public static MPlayer getPlayer(Player player) {
-		if (player instanceof MPlayer) {
-			return (MPlayer) player;
-		}
-		if ((((CraftPlayer) player).getHandle()).getBukkitEntity() instanceof MPlayer) {
-			return (MPlayer) ((((CraftPlayer) player).getHandle()).getBukkitEntity());
-		}
-		// We should never get here
-		//Logger.getLogger("Minecraft").warning("Player: " + player.getName() + " was not properly updated during login!");
-		updateBukkitEntity(player);
-		return (MPlayer) ((((CraftPlayer) player).getHandle()).getBukkitEntity());
+		
+		inventory = new MPlayerInventory(this);
 	}
 	
 	public void setSelectedMob(UUID id) {
@@ -134,17 +101,17 @@ public class MPlayer extends SpoutCraftPlayer implements Effected, EffectCollect
 	}
 	
 	public Set<Attribute> getSkills() {
-		return skills.keySet();
+		return attributes.keySet();
 	}
 	
 	public void setSkillValue(Attribute skill, int value) {
-		skills.put(skill, value);
+		attributes.put(skill, value);
 	}
 	
 	public int getSkillValue(String skill) {
 		for (Attribute sClass : getSkills()) {
 			if (sClass.getName().equalsIgnoreCase(skill)) {
-				return skills.get(sClass);
+				return attributes.get(sClass);
 			}
 		}
 		return 0;
@@ -170,8 +137,31 @@ public class MPlayer extends SpoutCraftPlayer implements Effected, EffectCollect
 		return hud;
 	}
 	
-	public void setExperience(double exp) {
+	public void setExperience(double exp, boolean update) {
+		if (update) {
+			int nLevel = Utils.getLevelByExp(exp, Settings.EXP_RATE);
+			if (nLevel != getLevel() && nLevel > getLevel()) {
+				setLevel(nLevel);
+				levelUp(nLevel - getLevel());
+			}
+		}
 		this.exp = exp;
+		
+		if (getHud() != null) {
+			getHud().updateExp(this);
+		}
+	}
+	
+	public void addExp(double exp) {
+		this.setExperience(getExperience() + exp, true);
+	}
+	
+	public void levelUp(int amount) {
+		this.setSkillPoints(this.getSkillPoints() + (amount * Settings.AP_PER_LEVEL));
+		SpoutManager.getPlayer(this.getPlayer()).sendNotification(
+				ChatColor.GREEN + "Level Up!", 
+				"You are now level " + (this.getLevel() + amount) + "!", 
+				Material.DIAMOND_SWORD);
 	}
 	
 	public double getExperience() {
@@ -186,22 +176,56 @@ public class MPlayer extends SpoutCraftPlayer implements Effected, EffectCollect
 		return maxHealth;
 	}
 	
-	public void setExp(int exp) {
-		this.exp = exp;
-	}
-	
 	public synchronized void setHealth(int health) {
 		this.health = health;
 		if (getHud() != null) {
-			getHud().getHealthbar().setCurrentValue(health);
+			getHud().getHealthBar().setCurrentValue(health);
 		}
 	}
 	
 	public void setMaxHealth(int health) {
 		this.maxHealth = health;
 		if (getHud() != null) {
-			getHud().getHealthbar().setMaxValue(health);
+			getHud().getHealthBar().setMaxValue(health);
 		}
+	}
+	
+	public void displayNotification(final Label notification) {
+		notification.setAnchor(WidgetAnchor.CENTER_CENTER).setHeight(10).setWidth(20).shiftXPos(-5).shiftYPos(-10);
+		notification.animate(WidgetAnim.POS_Y, 1.f, (short) 20, (short) 1, false, false).animateStart();
+		Bukkit.getScheduler().scheduleSyncDelayedTask(MRPG.getInstance(),
+			new Runnable() {
+				@Override
+				public void run() {
+					if (getPlayer() != null) {
+						SpoutManager.getPlayer(getPlayer()).getMainScreen().removeWidget(notification);
+					}
+				}
+			}, 20L
+		);
+		SpoutManager.getPlayer(this.getPlayer()).getMainScreen().attachWidget(MRPG.getInstance(), notification);
+	}
+	
+	public void displaySideNotification(final Label notification) {
+		
+		notification.setAnchor(WidgetAnchor.TOP_RIGHT)
+					.setHeight(GenericLabel.getStringHeight(notification.getText()))
+					.setWidth(GenericLabel.getStringWidth(notification.getText()))
+					.setY(4 + notification.getHeight())
+					.setX(-5 - notification.getWidth());
+		
+		notification.animate(WidgetAnim.POS_Y, 1.f, (short) 20, (short) 1, false, false).animateStart();
+		Bukkit.getScheduler().scheduleSyncDelayedTask(MRPG.getInstance(),
+			new Runnable() {
+				@Override
+				public void run() {
+					if (getPlayer() != null) {
+						SpoutManager.getPlayer(getPlayer()).getMainScreen().removeWidget(notification);
+					}
+				}
+			}, 20L
+		);
+		SpoutManager.getPlayer(this.getPlayer()).getMainScreen().attachWidget(MRPG.getInstance(), notification);
 	}
 	
 	@Override
@@ -214,6 +238,8 @@ public class MPlayer extends SpoutCraftPlayer implements Effected, EffectCollect
 			// Kill the player
 			getPlayer().setHealth(0);
 			setHealth(getMaxHealth());
+			setStamina(getMaxStamina());
+			setMana(getMaxMana());
 			return;
 		}
 		
@@ -253,6 +279,10 @@ public class MPlayer extends SpoutCraftPlayer implements Effected, EffectCollect
 	public void onEffected(MEffect effect, double amount) {
 		if (effect.getName().equalsIgnoreCase(EffectManager.HEALTH)) {
 			this.setMaxHealth(getMaxHealth() + (int) amount);
+		} else if (effect.getName().equalsIgnoreCase(EffectManager.STAMINA)) {
+			this.setMaxStamina(getMaxStamina() + (int) amount);
+		} else if (effect.getName().equalsIgnoreCase(EffectManager.MANA)) {
+			this.setMaxMana(getMaxMana() + (int) amount);
 		} else if (effect.getName().equalsIgnoreCase(EffectManager.EXP_RATE)) {
 			this.setExpRate(amount);
 		} else if (effect.getName().equalsIgnoreCase(EffectManager.ITEM_WEIGHT)) {
@@ -311,6 +341,16 @@ public class MPlayer extends SpoutCraftPlayer implements Effected, EffectCollect
 							MRPG.getItemManager().
 								getItem(getPlayer().getItemInHand());
 	}
+	
+	public int getLevel() {
+		return Utils.getLevelByExp(this.getExperience(), Settings.EXP_RATE);
+	}
+	
+	public void setLevel(int level) {
+		if (getHud() != null) {
+			getHud().getLevel().setText(Integer.toString(level));
+		}
+	}
 
 	@Override
 	public double getTotalEffects(MEffect effect) {
@@ -334,7 +374,7 @@ public class MPlayer extends SpoutCraftPlayer implements Effected, EffectCollect
 			skills += sClass.getTotalEffectsDecimal(effect) * getSkillValue(sClass.getName());
 		}
 		
-		return skills + getPrimaryWeapon().getTotalEffectsDecimal(effect) + getInventory().getTotalEffectsDecimal(effect);
+		return skills + getPrimaryWeapon().getAttack().getTotalEffectsDecimal(effect) + getInventory().getTotalEffectsDecimal(effect);
 	}
 
 	@Override
@@ -343,34 +383,13 @@ public class MPlayer extends SpoutCraftPlayer implements Effected, EffectCollect
 		for (Attribute sClass : getSkills()) {
 			effects.addAll(sClass.getEffects());
 		}
-		effects.addAll(getPrimaryWeapon().getEffects());
+		effects.addAll(getPrimaryWeapon().getAttack().getEffects());
 		effects.addAll(getInventory().getEffects());
 		return effects;
 	}
 	
-	@Override
 	public MPlayerInventory getInventory() {
-		if (this.inventory == null) {
-			createInventory(null);
-		} else if (!(this.inventory).getHandle().equals(this.getHandle().inventory)) {
-			createInventory(this.inventory.getName());
-		}
-		return this.inventory;
-	}
-	
-	@Override
-	public void createInventory(String name) {
-		if (this.getHandle().activeContainer instanceof ContainerPlayer) {
-			this.inventory = new MPlayerInventory(this, this.getHandle().inventory, new SpoutCraftingInventory(((ContainerPlayer) this.getHandle().activeContainer).craftInventory, ((ContainerPlayer) this.getHandle().activeContainer).resultInventory));
-			if (name != null) {
-				this.inventory.setName(name);
-			}
-		} else {
-			this.inventory = new MPlayerInventory(this, this.getHandle().inventory, new SpoutCraftingInventory(((ContainerPlayer) this.getHandle().defaultContainer).craftInventory, ((ContainerPlayer) this.getHandle().defaultContainer).resultInventory));
-			if (name != null) {
-				this.inventory.setName(name);
-			}
-		}
+		return inventory;
 	}
 
 	public int getDangerLevel() {
@@ -391,6 +410,78 @@ public class MPlayer extends SpoutCraftPlayer implements Effected, EffectCollect
 						.setWidth(GenericLabel.getStringWidth(getDangerLabel().getText()))
 						.setHeight(GenericLabel.getStringHeight(getDangerLabel().getText()))
 						.setFixed(true);
+	}
+
+	public int getMaxMana() {
+		return maxMana;
+	}
+
+	public void setMaxMana(int maxMana) {
+		this.maxMana = maxMana;
+		
+		if (getHud() != null) {
+			getHud().getManaBar().setMaxValue((float) maxMana);
+		}
+	}
+
+	public int getMana() {
+		return mana;
+	}
+
+	public void setMana(int mana) {
+		
+		if (mana > getMaxMana()) {
+			mana = getMaxMana();
+		}
+		if (mana < 0) {
+			mana = 0;
+		}
+		
+		this.mana = mana;
+		
+		if (getHud() != null) {
+			getHud().getManaBar().setCurrentValue((float) mana);
+		}
+	}
+
+	public int getMaxStamina() {
+		return maxStamina;
+	}
+
+	public void setMaxStamina(int maxStamina) {
+		this.maxStamina = maxStamina;
+		if (getHud() != null) {
+			getHud().getStaminaBar().setMaxValue((float) maxStamina);
+		}
+	}
+
+	public int getStamina() {
+		return stamina;
+	}
+
+	public void setStamina(int stamina) {
+		if (stamina > getMaxStamina()) {
+			stamina = getMaxStamina();
+		}
+		if (stamina < 0) {
+			stamina = 0;
+		}
+		
+		this.stamina = stamina;
+		
+		if (getPlayer() != null) {
+			if (getStamina() == getMaxStamina()) {
+				getPlayer().setFoodLevel(20);
+			} else if (((float) getStamina() / (float) getMaxStamina()) * 100.f <= Settings.STAMINA_DAMAGE_DECREASE_LIMIT) {
+				getPlayer().setFoodLevel(1);
+			} else {
+				getPlayer().setFoodLevel(19);
+			}
+		}
+		
+		if (getHud() != null) {
+			getHud().getStaminaBar().setCurrentValue((float) stamina);
+		}
 	}
 
 }

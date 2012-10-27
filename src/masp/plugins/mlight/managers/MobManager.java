@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import masp.plugins.mlight.MRPG;
-import masp.plugins.mlight.Utils;
 import masp.plugins.mlight.data.MCreature;
 import masp.plugins.mlight.data.effects.EffectCollection;
 import masp.plugins.mlight.data.effects.EffectParticipant;
@@ -35,6 +34,7 @@ import masp.plugins.mlight.data.mobs.mobwrappers.passive.MSnowGolem;
 import masp.plugins.mlight.data.mobs.mobwrappers.passive.MSquid;
 import masp.plugins.mlight.data.mobs.mobwrappers.passive.MVillager;
 import masp.plugins.mlight.data.mobs.mobwrappers.passive.MWolf;
+import masp.plugins.mlight.utils.Utils;
 
 import org.bukkit.entity.LivingEntity;
 

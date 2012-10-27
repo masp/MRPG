@@ -14,6 +14,8 @@ import masp.plugins.mlight.database.Database;
 import masp.plugins.mlight.database.MySQL;
 import masp.plugins.mlight.database.SQLite;
 
+import org.bukkit.entity.Player;
+
 public class DataManager {
 	
 	private Database database;
@@ -49,7 +51,8 @@ public class DataManager {
 					"`owner` TEXT NOT NULL," +
 					"`exp` REAL NOT NULL DEFAULT '0'," +
 					"`health` INTEGER NOT NULL," + 
-					"`max_health` INTEGER NOT NULL," +
+					"`mana` INTEGER NOT NULL," +
+					"`stamina` INTEGER NOT NULl," +
 					"`skill_points` INTEGER NOT NULL DEFAULT '0');");	
 
 			database.execute(conn,
@@ -84,12 +87,13 @@ public class DataManager {
 		int id = getPlayerId(player.getName(), conn);
 		if (id == 0) {
 			PreparedStatement stmt = conn.prepareStatement(
-					"INSERT INTO `players` (owner, exp, skill_points, health, max_health) VALUES (?, ?, ?, ?, ?);");
+					"INSERT INTO `players` (owner, exp, skill_points, health, mana, stamina) VALUES (?, ?, ?, ?, ?, ?);");
 			stmt.setString(1, player.getName());
 			stmt.setDouble(2, player.getExperience());
 			stmt.setInt(3, player.getSkillPoints());
 			stmt.setInt(4, player.getHealth());
-			stmt.setInt(5, player.getMaxHealth());
+			stmt.setInt(5, player.getMana());
+			stmt.setInt(6, player.getStamina());
 			stmt.execute();
 			stmt.close();
 			
@@ -97,11 +101,12 @@ public class DataManager {
 			
 		} else {
 			PreparedStatement stmt = conn.prepareStatement(
-					"UPDATE `players` SET exp=?, skill_points=?, health=?, max_health=? WHERE id=" + id + ";");
+					"UPDATE `players` SET exp=?, skill_points=?, health=?, mana=?, stamina=? WHERE id=" + id + ";");
 			stmt.setDouble(1, player.getExperience());
 			stmt.setInt(2, player.getSkillPoints());
 			stmt.setInt(3, player.getHealth());
-			stmt.setInt(4, player.getMaxHealth());
+			stmt.setInt(4, player.getMana());
+			stmt.setInt(5, player.getStamina());
 			stmt.executeUpdate();
 			stmt.close();
 		}
@@ -119,17 +124,19 @@ public class DataManager {
 		conn.close();
 	}
 	
-	public MPlayer loadPlayer(MPlayer mPlayer) throws SQLException {
+	public MPlayer loadPlayer(Player player) throws SQLException {
 		Connection conn = database.getConnection();
+		MPlayer mPlayer = new MPlayer(player);
 		int id = getPlayerId(mPlayer.getName(), conn);
 		if (id == 0) {
 			PreparedStatement stmt = conn.prepareStatement(
-					"INSERT INTO `players` (owner, exp, skill_points, health, max_health) VALUES (?, ?, ?, ?, ?);");
+					"INSERT INTO `players` (owner, exp, skill_points, health, mana, stamina) VALUES (?, ?, ?, ?, ?, ?);");
 			stmt.setString(1, mPlayer.getName());
 			stmt.setDouble(2, 0);
 			stmt.setInt(3, Settings.DEFAULT_SKILL_POINTS);
 			stmt.setInt(4, Settings.DEFAULT_MAX_HEALTH);
-			stmt.setInt(5, Settings.DEFAULT_MAX_HEALTH);
+			stmt.setInt(5, Settings.DEFAULT_MAX_MANA);
+			stmt.setInt(6, Settings.DEFAULT_MAX_STAMINA);
 			stmt.execute();
 			stmt.close();
 			
@@ -137,13 +144,14 @@ public class DataManager {
 		}
 		
 		PreparedStatement stmt = conn.prepareStatement(
-				"SELECT exp,skill_points,health,max_health FROM `players` WHERE id=" + id);
+				"SELECT exp,skill_points,health,mana,stamina FROM `players` WHERE id=" + id);
 		ResultSet set = stmt.executeQuery();
 		while (set.next()) {
-			mPlayer.setExperience(set.getDouble("exp"));
+			mPlayer.setExperience(set.getDouble("exp"), false);
 			mPlayer.setSkillPoints(set.getInt("skill_points"));
 			mPlayer.setHealth(set.getInt("health"));
-			mPlayer.setMaxHealth(set.getInt("max_health"));
+			mPlayer.setMana(set.getInt("mana"));
+			mPlayer.setStamina(set.getInt("stamina"));
 		}
 		set.close();
 		stmt.close();

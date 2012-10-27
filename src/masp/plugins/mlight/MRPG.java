@@ -6,6 +6,7 @@ import java.util.List;
 import masp.plugins.mlight.config.Configuration;
 import masp.plugins.mlight.config.CustomItemConfiguration;
 import masp.plugins.mlight.config.DatabaseConfiguration;
+import masp.plugins.mlight.config.ExpConfiguration;
 import masp.plugins.mlight.config.ItemConfiguration;
 import masp.plugins.mlight.config.MobConfiguration;
 import masp.plugins.mlight.config.SkillClassConfiguration;
@@ -15,16 +16,19 @@ import masp.plugins.mlight.data.player.MPlayer;
 import masp.plugins.mlight.exceptions.EffectNotFoundException;
 import masp.plugins.mlight.gui.GuiHandler;
 import masp.plugins.mlight.listeners.DamageListener;
+import masp.plugins.mlight.listeners.ExpListener;
 import masp.plugins.mlight.listeners.GeneralListener;
 import masp.plugins.mlight.listeners.MobListener;
-import masp.plugins.mlight.listeners.PlayerReplaceListener;
 import masp.plugins.mlight.managers.AttributeManager;
 import masp.plugins.mlight.managers.DataManager;
+import masp.plugins.mlight.managers.ExpManager;
 import masp.plugins.mlight.managers.ItemManager;
 import masp.plugins.mlight.managers.MobEffectManager;
 import masp.plugins.mlight.managers.MobManager;
 import masp.plugins.mlight.managers.PlayerManager;
 import masp.plugins.mlight.threads.EffectMonitorThread;
+import masp.plugins.mlight.utils.Data;
+import masp.plugins.mlight.utils.TestCommands;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -46,6 +50,7 @@ public class MRPG extends JavaPlugin implements Listener {
 	private static EffectManager eManager;
 	private static AttributeManager aManager;
 	private static MobEffectManager meManager;
+	private static ExpManager expManager;
 	
 	private static GuiHandler gHandler;
 	
@@ -53,23 +58,24 @@ public class MRPG extends JavaPlugin implements Listener {
 	
 	@Override
 	public void onLoad() {
+		instance = this;
+		
 		this.dataConfig = new DatabaseConfiguration(this, getDataFolder());
 		addConfig(dataConfig);
 		
 		dManager = new DataManager(this);
 		pManager = new PlayerManager();
-		iManager = new ItemManager();
 		mManager = new MobManager();
 		eManager = new EffectManager();
 		aManager = new AttributeManager();
 		gHandler = new GuiHandler();
 		meManager = new MobEffectManager();
+		expManager = new ExpManager();
 	}
 	
 	@Override
 	public void onEnable() {
-		
-		instance = this;
+		iManager = new ItemManager();
 		
 		// Spout
 		this.addFilesToCache();
@@ -85,16 +91,18 @@ public class MRPG extends JavaPlugin implements Listener {
 		pm.registerEvents(this, this);
 		pm.registerEvents(gHandler, this);
 		pm.registerEvents(new MobListener(), this);
-		pm.registerEvents(new PlayerReplaceListener(), this);
+		pm.registerEvents(new ExpListener(), this);
 		
 		// Register commands (test)
 		this.getCommand("mattr").setExecutor(commands);
+		this.getCommand("effects").setExecutor(commands);
 		pm.registerEvents(commands, this);
 		
 		addConfig(new ItemConfiguration(this, this.getDataFolder()));
 		addConfig(new CustomItemConfiguration(this, this.getDataFolder()));
 		addConfig(new MobConfiguration(this, this.getDataFolder()));
 		addConfig(new SkillClassConfiguration(this, this.getDataFolder()));
+		addConfig(new ExpConfiguration(this, this.getDataFolder()));
 		
 		for (Configuration config : configs) {
 			config.onRead();
@@ -120,6 +128,13 @@ public class MRPG extends JavaPlugin implements Listener {
 		FileManager fm = SpoutManager.getFileManager();
 		fm.addToPreLoginCache(this, "https://dl.dropbox.com/u/26497130/label1_1.png");
 		fm.addToPreLoginCache(this, "https://dl.dropbox.com/u/26497130/attribute_background.png");
+		fm.addToPreLoginCache(this, Data.getInventoryBackground().getUrl());
+		fm.addToPreLoginCache(this, Data.HUD_BACKGROUND);
+		fm.addToPreLoginCache(this, Data.HUD_BUBBLE);
+		fm.addToPreLoginCache(this, Data.BAG_URL);
+		for (int i = 0; i <= 50; i++) {
+			fm.addToPreLoginCache(this, Data.getExpTexture(i));
+		}
 	}
 	
 	public void registerKeys() {
@@ -144,6 +159,10 @@ public class MRPG extends JavaPlugin implements Listener {
 	
 	public static AttributeManager getAttributeManager() {
 		return aManager;
+	}
+	
+	public static ExpManager getExpManager() {
+		return expManager;
 	}
 	
 	public static EffectManager getEffectManager() {

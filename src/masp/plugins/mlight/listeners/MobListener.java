@@ -84,16 +84,13 @@ public class MobListener implements Listener {
 	
 	@EventHandler
 	public void onChunkLoaded(ChunkLoadEvent event) {
-		// Only old chunks would have stored mobs
-		if (!event.isNewChunk()) {
-			final Chunk chunk = event.getChunk();
-			for (Entity entity : chunk.getEntities()) {
-				if (entity instanceof LivingEntity) {
-					replaceEntity(entity.getType(), 
-								  ((CraftEntity) entity).getHandle(),
-								  ((CraftWorld) entity.getWorld()).getHandle(),
-								  entity.getLocation());
-				}
+		final Chunk chunk = event.getChunk();
+		for (Entity entity : chunk.getEntities()) {
+			if (entity instanceof LivingEntity) {
+				replaceEntity(entity.getType(), 
+							  ((CraftEntity) entity).getHandle(),
+							  ((CraftWorld) entity.getWorld()).getHandle(),
+							  entity.getLocation());
 			}
 		}
 	}
@@ -306,7 +303,7 @@ public class MobListener implements Listener {
 			MVillager villager = new MVillager(mcWorld);
 			villager.setPosition(location.getX(), location.getY(), location.getZ());
 			
-			mcWorld.removeEntity((net.minecraft.server.EntityIronGolem) mcEntity);
+			mcWorld.removeEntity((net.minecraft.server.EntityVillager) mcEntity);
 			mcWorld.addEntity(villager, SpawnReason.CUSTOM);
 			
 		}

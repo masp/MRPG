@@ -3,10 +3,10 @@ package masp.plugins.mlight.gui.widgets;
 import java.util.List;
 
 import masp.plugins.mlight.MRPG;
-import masp.plugins.mlight.Utils;
 import masp.plugins.mlight.data.Attribute;
 import masp.plugins.mlight.data.player.MPlayer;
 import masp.plugins.mlight.gui.menus.AttributeMenu;
+import masp.plugins.mlight.utils.Utils;
 
 import org.bukkit.ChatColor;
 import org.getspout.spoutapi.gui.GenericListWidget;

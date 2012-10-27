@@ -1,10 +1,12 @@
-package masp.plugins.mlight;
+package masp.plugins.mlight.utils;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import masp.plugins.mlight.MRPG;
+import masp.plugins.mlight.Settings;
 import masp.plugins.mlight.data.effects.EffectCollection;
 import masp.plugins.mlight.data.effects.EffectManager;
 import masp.plugins.mlight.data.effects.EffectParticipant;
@@ -12,6 +14,7 @@ import masp.plugins.mlight.data.effects.SimpleEffectParticipant;
 import masp.plugins.mlight.data.effects.types.MEffect;
 import masp.plugins.mlight.data.effects.types.WeaponEffect;
 import masp.plugins.mlight.data.effects.types.WeaponEffect.WeaponType;
+import masp.plugins.mlight.data.player.MPlayer;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
@@ -50,7 +53,6 @@ public class Utils {
 			if (effect instanceof WeaponEffect) {
 				WeaponEffect wEffect = (WeaponEffect) effect;
 				if (wEffect.getType() == WeaponType.DEFENSE) {
-					System.out.println(wEffect.getName() + ": " + receiver.getTotalEffects(wEffect));
 					receivers.put(wEffect, (int) receiver.getTotalEffects(wEffect));
 				}
 			}
@@ -97,7 +99,7 @@ public class Utils {
 		int totalDamage = 0;
 		for (WeaponEffect effect : damagers.keySet()) {
 			totalDamage += 
-					(damagers.get(effect) - receivers.get(MRPG.getEffect(effect.getName().split("_")[0] + "_DEFENSE")));
+					(damagers.get(effect) - receivers.get(MRPG.getEffect(effect.getBaseName() + "_DEFENSE")));
 		}
 		
 		// We don't allow negative damage
@@ -177,6 +179,37 @@ public class Utils {
 			return  (loc.getBlockX() == loc2.getBlockX()) &&
 					(loc.getBlockZ() == loc2.getBlockZ());
 		}
+	}
+	
+	public static int getExpTexture(MPlayer player) {
+		double baseExp = Utils.getExpByLevel(player.getLevel(), Settings.EXP_RATE);
+		double plExp = player.getExperience() - baseExp;
+		double maxExp = Utils.getExpByLevel(player.getLevel() + 1, Settings.EXP_RATE);
+		double diffProp = maxExp - baseExp;
+		return Math.min(50, Math.max(0, (int) Math.floor((plExp * 50) / diffProp)));
+	}
+	
+	public static int getLevelByExp(double exp, double exp_rate) {
+		int level = 1;
+		if (exp == 0) {
+			return 1;
+		}
+		while (level <= 9999) { // Hard-coded max level to prevent expensive computations and unnecessary overflow.
+			int nExp = Utils.getExpByLevel(level, exp_rate);
+			if (nExp > exp) {
+				return level - 1;
+			}
+			level++;
+		}
+		return level;
+	}
+	
+	public static int getExpByLevel(int level, double exp_rate) {
+		int sumExp = 0;
+		for (int i = 1; i < level; i++) {
+			sumExp += Math.floor(i + exp_rate * Math.pow(2.D, ((double) i) / 7.D));
+		}
+		return (int) Math.floor(sumExp / 4);
 	}
 	
 	public static void printInventory(Player player) {

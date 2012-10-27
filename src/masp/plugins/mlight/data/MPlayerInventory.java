@@ -11,13 +11,10 @@ import masp.plugins.mlight.data.effects.EffectCollection;
 import masp.plugins.mlight.data.effects.types.MEffect;
 import masp.plugins.mlight.data.items.MItem;
 import masp.plugins.mlight.data.player.MPlayer;
-import net.minecraft.server.PlayerInventory;
 
 import org.bukkit.inventory.ItemStack;
-import org.getspout.spout.inventory.SpoutCraftInventoryPlayer;
-import org.getspout.spout.inventory.SpoutCraftingInventory;
 
-public class MPlayerInventory extends SpoutCraftInventoryPlayer implements EffectCollection {
+public class MPlayerInventory implements EffectCollection {
 	
 	private MPlayer player;
 	
@@ -25,9 +22,7 @@ public class MPlayerInventory extends SpoutCraftInventoryPlayer implements Effec
 	
 	private ItemStack[] pet;
 	
-	public MPlayerInventory(MPlayer player, PlayerInventory inventory, SpoutCraftingInventory crafting) {
-		super(inventory, crafting);
-		
+	public MPlayerInventory(MPlayer player) {
 		this.player = player;
 		this.cArmor = new ItemStack[8];
 		this.pet = new ItemStack[4];
@@ -124,11 +119,11 @@ public class MPlayerInventory extends SpoutCraftInventoryPlayer implements Effec
 		for (ItemStack item : cArmor) {
 			if (item == null) continue;
 			MItem mItem = MRPG.getItemManager().getItem(item);
-			total += mItem.getTotalEffectsPercent(effect);
+			total += mItem.getDefense().getTotalEffectsPercent(effect);
 		}
-		for (ItemStack item : this.getArmorContents()) {
+		for (ItemStack item : getPlayer().getPlayer().getInventory().getArmorContents()) {
 			if (item == null) continue;
-			total += MRPG.getItemManager().getItem(item).getTotalEffectsPercent(effect);
+			total += MRPG.getItemManager().getItem(item).getDefense().getTotalEffectsPercent(effect);
 		}
 		return total;
 	}
@@ -139,11 +134,12 @@ public class MPlayerInventory extends SpoutCraftInventoryPlayer implements Effec
 		for (ItemStack item : cArmor) {
 			if (item == null) continue;
 			MItem mItem = MRPG.getItemManager().getItem(item);
-			total += mItem.getTotalEffectsDecimal(effect);
+			total += mItem.getDefense().getTotalEffectsDecimal(effect);
 		}
-		for (ItemStack item : this.getArmorContents()) {
+		for (ItemStack item : getPlayer().getPlayer().getInventory().getArmorContents()) {
 			if (item == null) continue;
-			total += MRPG.getItemManager().getItem(item).getTotalEffectsDecimal(effect);
+			MItem mItem = MRPG.getItemManager().getItem(item);
+			total += mItem.getDefense().getTotalEffectsDecimal(effect);
 		}
 		return total;
 	}
@@ -154,11 +150,12 @@ public class MPlayerInventory extends SpoutCraftInventoryPlayer implements Effec
 		for (ItemStack item : cArmor) {
 			if (item == null) continue;
 			MItem mItem = MRPG.getItemManager().getItem(item);
-			effects.addAll(mItem.getEffects());
+			effects.addAll(mItem.getDefense().getEffects());
 		}
-		for (ItemStack item : this.getArmorContents()) {
+		for (ItemStack item : getPlayer().getPlayer().getInventory().getArmorContents()) {
 			if (item == null) continue;
-			effects.addAll(MRPG.getItemManager().getItem(item).getEffects());
+			MItem mItem = MRPG.getItemManager().getItem(item);
+			effects.addAll(mItem.getDefense().getEffects());
 		}
 		return new HashSet<MEffect>(effects);
 	}

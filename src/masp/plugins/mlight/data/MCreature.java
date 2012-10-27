@@ -1,12 +1,12 @@
 package masp.plugins.mlight.data;
 
 import masp.plugins.mlight.MRPG;
-import masp.plugins.mlight.Utils;
 import masp.plugins.mlight.data.effects.EffectCollection;
 import masp.plugins.mlight.data.effects.EffectManager;
 import masp.plugins.mlight.data.effects.EffectParticipant;
 import masp.plugins.mlight.data.effects.SimpleEffectParticipant;
 import masp.plugins.mlight.managers.MobEffectManager;
+import masp.plugins.mlight.utils.Utils;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
@@ -22,10 +22,12 @@ public class MCreature extends SimpleEffectParticipant implements Damageable {
 	
 	private int maxHealth;
 	private EntityType type;
+	private double exp;
 	
-	public MCreature(EntityType type, int maxHealth) {
+	public MCreature(EntityType type, int maxHealth, double exp) {
 		this.setMaxHealth(maxHealth);
 		this.setType(type);
+		this.setExp(exp);
 	}
 
 	public int getMaxHealth() {
@@ -106,6 +108,7 @@ public class MCreature extends SimpleEffectParticipant implements Damageable {
 			this.kill(entity);
 			return;
 		}
+		
 		entity.setHealth(convertedReducedHealth);
 	}
 	
@@ -136,6 +139,14 @@ public class MCreature extends SimpleEffectParticipant implements Damageable {
 	@Override
 	public int hashCode() {
 		return getType().hashCode();
+	}
+
+	public double getExp() {
+		return exp;
+	}
+
+	public void setExp(double exp) {
+		this.exp = exp;
 	}
 	
 }

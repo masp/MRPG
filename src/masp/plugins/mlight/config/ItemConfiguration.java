@@ -25,17 +25,16 @@ public class ItemConfiguration extends Configuration {
 			Item item = Item.byId[i];
 			int damage = item.a((net.minecraft.server.Entity) null);
 			getConfig().set("items." + mat.name().toLowerCase() + ".attack-effects.decimal.general_damage", 
-					damage * Settings.CONVERSION_FACTOR);
+					damage * Settings.HEALTH_CONVERSION);
 			if (item instanceof ItemArmor) {
 				ItemArmor armor = (ItemArmor) item;
 				// Damage reduction
 				int dReduce = armor.b;
-				getConfig().set("items." + mat.name().toLowerCase() + ".defense-effects.decimal.general_defense", dReduce);
+				getConfig().set("items." + mat.name().toLowerCase() + ".defense-effects.decimal.general_defense", dReduce * Settings.HEALTH_CONVERSION);
 			}
 		}
-		getConfig().set("items.fist.attack-effects.decimal.general_damage", Settings.CONVERSION_FACTOR);
-		getConfig().set("items.fist.attack-effects.percent.general_damage", Settings.CONVERSION_FACTOR);
-		getConfig().set("items.shot.attack-effects.decimal.general_damage", 5 * Settings.CONVERSION_FACTOR);
+		getConfig().set("items.fist.attack-effects.decimal.general_damage", Settings.HEALTH_CONVERSION);
+		getConfig().set("items.shot.attack-effects.decimal.general_damage", 5 * Settings.HEALTH_CONVERSION);
 		try {
 			getConfig().save(getFile());
 		} catch (IOException e) {
@@ -67,7 +66,7 @@ public class ItemConfiguration extends Configuration {
 		}
 		
 		if (getConfig().getConfigurationSection("items." + name + ".defense-effects") != null) {
-			super.loadEffects(item.getAttack(), "items." + name + ".defense-effects");
+			super.loadEffects(item.getDefense(), "items." + name + ".defense-effects");
 		}
 	}
 

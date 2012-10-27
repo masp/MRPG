@@ -3,14 +3,17 @@ package masp.plugins.mlight.gui;
 import masp.plugins.mlight.MRPG;
 import masp.plugins.mlight.data.player.MPlayer;
 import masp.plugins.mlight.gui.menus.AttributeMenu;
+import masp.plugins.mlight.gui.menus.MCustomInventory;
 import masp.plugins.mlight.gui.menus.PlayerHud;
 
+import org.bukkit.GameMode;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.getspout.spoutapi.SpoutManager;
 import org.getspout.spoutapi.event.input.KeyBindingEvent;
+import org.getspout.spoutapi.event.input.KeyPressedEvent;
 import org.getspout.spoutapi.event.spout.SpoutCraftEnableEvent;
 import org.getspout.spoutapi.gui.ContainerType;
 import org.getspout.spoutapi.gui.ScreenType;
@@ -32,6 +35,20 @@ public class GuiHandler implements BindingExecutionDelegate, Listener {
 				AttributeMenu aMenu = new AttributeMenu(event.getPlayer());
 				event.getPlayer().getMainScreen().attachPopupScreen(aMenu);
 				return;
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onKeyPress(KeyPressedEvent event) { 
+		if (event.getPlayer().getGameMode() == GameMode.CREATIVE) {
+			return;
+		}
+		if (event.getKey().equals(event.getPlayer().getInventoryKey())) {
+			SpoutPlayer player = event.getPlayer();
+			if (player.getActiveScreen() == ScreenType.GAME_SCREEN || player.getActiveScreen() == ScreenType.PLAYER_INVENTORY) {
+				final MCustomInventory inv = new MCustomInventory(MRPG.getPlayer(player));
+				inv.makeGui();
 			}
 		}
 	}
