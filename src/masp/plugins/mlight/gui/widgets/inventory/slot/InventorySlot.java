@@ -56,6 +56,10 @@ public class InventorySlot extends GenericSlot {
 	public Slot setItem(ItemStack is) {
 		return setItem(is, true);
 	}
+	
+	public InventoryGui getGui() {
+		return gui;
+	}
 
 	public Slot setItem(ItemStack is, boolean update) {
 		if(update) gui.updateContents(this, is);

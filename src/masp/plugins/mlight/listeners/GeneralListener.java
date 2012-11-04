@@ -23,6 +23,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.getspout.spoutapi.SpoutManager;
 import org.getspout.spoutapi.event.spout.SpoutCraftEnableEvent;
+import org.getspout.spoutapi.gui.InGameHUD;
 import org.getspout.spoutapi.player.SpoutPlayer;
 
 public class GeneralListener implements Listener {
@@ -36,14 +37,21 @@ public class GeneralListener implements Listener {
 				ItemStack armor = player.getPlayer().getInventory().getItem(i) == null ? 
 						new ItemStack(Material.AIR, 1) : player.getPlayer().getInventory().getItem(i); 
 				MItem item = MRPG.getItemManager().getItem(armor);
-				player.getPlayer().getInventory().setItem(i, null);
+				/*player.getPlayer().getInventory().setItem(i, null);
 					player.onEffected(item);
-				player.getPlayer().getInventory().setItem(i, armor);
+				player.getPlayer().getInventory().setItem(i, armor);*/
+				player.updateEffects(item.getDefense());
 			}
-			player.onEffected(MRPG.getItemManager().getItem(player.getPlayer().getItemInHand()));
-			for (Attribute sClass : player.getSkills()) {
-				player.onEffected(sClass);
+			player.updateEffects(MRPG.getItemManager().getItem(player.getPlayer().getItemInHand()));
+			for (Attribute att : player.getActiveAttributes()) {
+				player.updateEffects(att);
 			}
+			InGameHUD hud = event.getPlayer().getMainScreen();
+			hud.getBubbleBar().shiftYPos(19);
+			hud.getHealthBar().setVisible(false);
+			hud.getArmorBar().setVisible(false);
+			hud.getHungerBar().setVisible(false);
+			hud.getExpBar().setVisible(false);
 			player.setSkillPoints(999);
 		} catch (SQLException ex) {
 			ex.printStackTrace();

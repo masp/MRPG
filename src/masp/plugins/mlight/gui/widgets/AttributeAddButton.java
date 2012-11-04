@@ -25,7 +25,8 @@ public class AttributeAddButton extends GenericButton {
 	public void onButtonClick(ButtonClickEvent event) {
 		MPlayer player = MRPG.getPlayer(event.getPlayer());
 		if (player.getSkillPoints() >= att.getCost()) {
-			player.setSkillValue(att, player.getSkillValue(att.getName()) + 1);
+			player.onEffected(MRPG.getAttributeManager().getSkill(att.getName()));
+			player.setAttributeValue(att, player.getAttributeValue(att.getName()) + 1);
 			player.setSkillPoints(player.getSkillPoints() - 1 < 0 || player.getSkillPoints() == 0 ? 0 : player.getSkillPoints() - 1);
 			this.setEnabled(player.getSkillPoints() >= att.getCost());
 			menu.updateAll();

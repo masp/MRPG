@@ -117,7 +117,7 @@ public class DataManager {
 					"INSERT INTO `mrpg_attributes` (p_id, att_name, amount) VALUES (?, ?, ?);");
 			skillStatement.setInt(1, id);
 			skillStatement.setString(2, skill.getName());
-			skillStatement.setFloat(3, player.getSkillValue(skill.getName()));
+			skillStatement.setFloat(3, player.getAttributeValue(skill.getName()));
 			skillStatement.execute();
 			skillStatement.close();
 		}
@@ -161,7 +161,7 @@ public class DataManager {
 					"SELECT amount FROM `mrpg_attributes` WHERE p_id=" + id + " AND att_name='" + skill.getName() + "';");
 			ResultSet skillSet = skillStmt.executeQuery();
 			while (skillSet.next()) {
-				mPlayer.setSkillValue(skill, skillSet.getInt("amount"));
+				mPlayer.setAttributeValue(skill, skillSet.getInt("amount"));
 			}
 			skillSet.close();
 			skillStmt.close();

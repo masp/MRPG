@@ -1,7 +1,11 @@
 package masp.plugins.mlight.data.player;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -56,6 +60,8 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 	private double expRate = Settings.EXP_RATE;
 	private double exp;
 	
+	private transient Map<String, Title> titles = new HashMap<String, Title>();
+	
 	private transient PlayerHud hud;
 	
 	private transient Label dangerLabel;
@@ -88,6 +94,7 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 		for (Attribute sClass : MRPG.getAttributeManager().getSkills()) {
 			attributes.put(sClass, 0);
 		}
+		addTitle(new Title(ChatColor.GOLD + player.getName(), "name", 0));
 		
 		inventory = new MPlayerInventory(this);
 	}
@@ -100,16 +107,30 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 		return selectedMob;
 	}
 	
-	public Set<Attribute> getSkills() {
+	public Set<Attribute> getAttributes() {
 		return attributes.keySet();
 	}
 	
-	public void setSkillValue(Attribute skill, int value) {
+	public int getAttributeValue(Attribute att) {
+		return getAttributeValue(att.getName());
+	}
+	
+	public Set<Attribute> getActiveAttributes() {
+		Set<Attribute> atts = new HashSet<Attribute>();
+		for (Attribute att : getAttributes()) {
+			if (getAttributeValue(att.getName()) > 0) {
+				atts.add(att);
+			}
+		}
+		return atts;
+	}
+	
+	public void setAttributeValue(Attribute skill, int value) {
 		attributes.put(skill, value);
 	}
 	
-	public int getSkillValue(String skill) {
-		for (Attribute sClass : getSkills()) {
+	public int getAttributeValue(String skill) {
+		for (Attribute sClass : getAttributes()) {
 			if (sClass.getName().equalsIgnoreCase(skill)) {
 				return attributes.get(sClass);
 			}
@@ -179,7 +200,7 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 	public synchronized void setHealth(int health) {
 		this.health = health;
 		if (getHud() != null) {
-			getHud().getHealthBar().setCurrentValue(health);
+			getHud().getHealthBar().setValue(health);
 		}
 	}
 	
@@ -274,15 +295,21 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 			onEffected(effect, participant.getTotalEffects(effect));
 		}
 	}
+	
+	public void updateEffects(EffectCollection collection) {
+		for (MEffect effect : collection.getEffects()) {
+			onEffected(effect, 0D);
+		}
+	}
 
 	@Override
 	public void onEffected(MEffect effect, double amount) {
 		if (effect.getName().equalsIgnoreCase(EffectManager.HEALTH)) {
-			this.setMaxHealth(getMaxHealth() + (int) amount);
+			this.setMaxHealth(Settings.DEFAULT_MAX_HEALTH + (int) getTotalEffects(effect) + (int) amount);
 		} else if (effect.getName().equalsIgnoreCase(EffectManager.STAMINA)) {
-			this.setMaxStamina(getMaxStamina() + (int) amount);
+			this.setMaxStamina((Settings.DEFAULT_MAX_HEALTH + (int) getTotalEffects(effect) + (int) amount));
 		} else if (effect.getName().equalsIgnoreCase(EffectManager.MANA)) {
-			this.setMaxMana(getMaxMana() + (int) amount);
+			this.setMaxMana((Settings.DEFAULT_MAX_HEALTH + (int) getTotalEffects(effect) + (int) amount));
 		} else if (effect.getName().equalsIgnoreCase(EffectManager.EXP_RATE)) {
 			this.setExpRate(amount);
 		} else if (effect.getName().equalsIgnoreCase(EffectManager.ITEM_WEIGHT)) {
@@ -360,8 +387,8 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 	@Override
 	public double getTotalEffectsPercent(MEffect effect) {
 		double skills = 0.D;
-		for (Attribute sClass : getSkills()) {
-			skills += sClass.getTotalEffectsPercent(effect) * getSkillValue(sClass.getName());
+		for (Attribute sClass : getAttributes()) {
+			skills += sClass.getTotalEffectsPercent(effect) * getAttributeValue(sClass.getName());
 		}
 		
 		return skills + getPrimaryWeapon().getTotalEffectsPercent(effect) + getInventory().getTotalEffectsPercent(effect);
@@ -370,8 +397,8 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 	@Override
 	public double getTotalEffectsDecimal(MEffect effect) {
 		double skills = 0.D;
-		for (Attribute sClass : getSkills()) {
-			skills += sClass.getTotalEffectsDecimal(effect) * getSkillValue(sClass.getName());
+		for (Attribute sClass : getAttributes()) {
+			skills += sClass.getTotalEffectsDecimal(effect) * getAttributeValue(sClass.getName());
 		}
 		
 		return skills + getPrimaryWeapon().getAttack().getTotalEffectsDecimal(effect) + getInventory().getTotalEffectsDecimal(effect);
@@ -380,7 +407,7 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 	@Override
 	public Set<MEffect> getEffects() {
 		Set<MEffect> effects = new HashSet<MEffect>();
-		for (Attribute sClass : getSkills()) {
+		for (Attribute sClass : getAttributes()) {
 			effects.addAll(sClass.getEffects());
 		}
 		effects.addAll(getPrimaryWeapon().getAttack().getEffects());
@@ -420,7 +447,7 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 		this.maxMana = maxMana;
 		
 		if (getHud() != null) {
-			getHud().getManaBar().setMaxValue((float) maxMana);
+			getHud().getManaBar().setMaxValue(maxMana);
 		}
 	}
 
@@ -440,7 +467,7 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 		this.mana = mana;
 		
 		if (getHud() != null) {
-			getHud().getManaBar().setCurrentValue((float) mana);
+			getHud().getManaBar().setValue(mana);
 		}
 	}
 
@@ -451,8 +478,29 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 	public void setMaxStamina(int maxStamina) {
 		this.maxStamina = maxStamina;
 		if (getHud() != null) {
-			getHud().getStaminaBar().setMaxValue((float) maxStamina);
+			getHud().getStaminaBar().setMaxValue(maxStamina);
 		}
+	}
+	
+	public void addTitle(Title title) {
+		getTitles().put(title.getId(), title);
+		
+		this.updateTitle();
+	}
+	
+	private Map<String, Title> getTitles() {
+		return titles;
+	}
+	
+	public void removeTitle(String id) {
+		getTitles().remove(id);
+		this.updateTitle();
+	}
+	
+	public void updateTitle() {
+		List<Title> titles = new ArrayList<Title>(getTitles().values());
+		Collections.sort(titles);
+		SpoutManager.getPlayer(getPlayer()).setTitle(Utils.joinTitles(titles, "\n"));
 	}
 
 	public int getStamina() {
@@ -480,7 +528,7 @@ public class MPlayer implements Effected, EffectCollection, Damageable {
 		}
 		
 		if (getHud() != null) {
-			getHud().getStaminaBar().setCurrentValue((float) stamina);
+			getHud().getStaminaBar().setValue(stamina);
 		}
 	}
 

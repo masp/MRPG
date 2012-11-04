@@ -2,7 +2,6 @@ package masp.plugins.mlight.gui.menus;
 
 import masp.plugins.mlight.MRPG;
 import masp.plugins.mlight.data.player.MPlayer;
-import masp.plugins.mlight.gui.widgets.Bar;
 import masp.plugins.mlight.gui.widgets.GenericBar;
 import masp.plugins.mlight.utils.Data;
 import masp.plugins.mlight.utils.Utils;
@@ -20,9 +19,9 @@ import org.getspout.spoutapi.player.SpoutPlayer;
 
 public class PlayerHud extends GenericContainer {
 	
-	private Bar healthBar;
-	private Bar manaBar;
-	private Bar staminaBar;
+	private GenericBar healthBar;
+	private GenericBar manaBar;
+	private GenericBar staminaBar;
 	
 	private Label level;
 	
@@ -89,51 +88,42 @@ public class PlayerHud extends GenericContainer {
 			  .setPriority(RenderPriority.Lowest);
 		
 		
-		healthBar = new GenericBar(mPlayer.getMaxHealth(), mPlayer.getHealth());
-		healthBar.getGradient()
-				 .setTopColor(new Color(208, 0, 0))
-		 		 .setBottomColor(new Color(128, 0, 0))
-		 		 .setWidth(100)
-		 		 .setHeight(8);
+		healthBar = new GenericBar("http://imageshack.us/a/img96/2773/wipreddepleted001.png",
+								   "http://imageshack.us/a/img571/9848/wipred001.png",
+								   100, 8, new Color(255, 255, 255));
+
+		healthBar.setMaxValue(mPlayer.getMaxHealth());
+		healthBar.setValue(mPlayer.getHealth());
 		
 		healthBar.setFixed(true)
 				 .setAnchor(WidgetAnchor.TOP_LEFT)
-				 .setWidth(100)
-				 .setHeight(8)
 				 .setMarginLeft(bgExp.getWidth() - 5)
 				 .setMarginTop(14);
 		
-		manaBar = new GenericBar(mPlayer.getMaxMana(), mPlayer.getMana());
-		manaBar.getGradient()
-			   .setTopColor(new Color(94, 117, 191))
-			   .setBottomColor(new Color(20, 34, 77))
-			   .setWidth(100)
-			   .setHeight(8);
+		manaBar = new GenericBar("http://imageshack.us/a/img443/806/wipbluedepleted001.png",
+				   				 "http://imageshack.us/a/img22/4250/wipblue001.png",
+				   				 100, 8, new Color(255, 255, 255));
 		
 		manaBar.setFixed(true)
 			   .setAnchor(WidgetAnchor.TOP_LEFT)
-			   .setWidth(100)
-			   .setHeight(8)
 			   .setMarginLeft(bgExp.getWidth() - 5)
 			   .setMarginTop(healthBar.getMarginTop() + healthBar.getHeight() + 1);
 		
-		staminaBar = new GenericBar(mPlayer.getMaxStamina(), mPlayer.getStamina());
-		staminaBar.getGradient()
-			   .setTopColor(new Color(217, 151, 56))
-			   .setBottomColor(new Color(163, 97, 3))
-			   .setWidth(100)
-			   .setHeight(8);
+		manaBar.setMaxValue(mPlayer.getMaxMana());
+		manaBar.setValue(mPlayer.getMaxMana());
+		
+		
+		staminaBar = new GenericBar("http://imageshack.us/a/img502/5195/wipgolddepleted001.png",
+				   					"http://imageshack.us/a/img843/3645/wipgold001.png",
+				   					 100, 8, new Color(255, 255, 255));
+		
+		staminaBar.setMaxValue(mPlayer.getMaxStamina());
+		staminaBar.setValue(mPlayer.getStamina());
 		
 		staminaBar.setFixed(true)
 			   .setAnchor(WidgetAnchor.TOP_LEFT)
-			   .setWidth(100)
-			   .setHeight(8)
 			   .setMarginLeft(bgExp.getWidth() - 5)
 			   .setMarginTop(manaBar.getMarginTop() + manaBar.getHeight() + 1);
-		
-		healthBar.init();
-		manaBar.init();
-		staminaBar.init();
 		
 		addChildren(healthBar, manaBar, staminaBar, bgExp, currExp, level, apText, bgAp);
 	}
@@ -151,15 +141,15 @@ public class PlayerHud extends GenericContainer {
 		return apText;
 	}
 	
-	public Bar getStaminaBar() {
+	public GenericBar getStaminaBar() {
 		return staminaBar;
 	}
 	
-	public Bar getManaBar() {
+	public GenericBar getManaBar() {
 		return manaBar;
 	}
 	
-	public Bar getHealthBar() {
+	public GenericBar getHealthBar() {
 		return healthBar;
 	}
 	

@@ -1,137 +1,89 @@
 package masp.plugins.mlight.gui.widgets;
 
 
+import org.getspout.spoutapi.gui.Color;
 import org.getspout.spoutapi.gui.ContainerType;
 import org.getspout.spoutapi.gui.GenericContainer;
 import org.getspout.spoutapi.gui.GenericLabel;
-import org.getspout.spoutapi.gui.Gradient;
-import org.getspout.spoutapi.gui.Label;
+import org.getspout.spoutapi.gui.GenericTexture;
 import org.getspout.spoutapi.gui.RenderPriority;
+import org.getspout.spoutapi.gui.WidgetAnchor;
 
-public class GenericBar extends GenericContainer implements Bar {
-
-	private float maxValue;
-	private float currValue;
+public class GenericBar extends GenericContainer {
+	protected GenericLabel description;
+	protected GenericTexture background, progress;
+	protected int maxValue;
 	
-	private BarGradient gradient;
-	private BarGradient bgGradient;
-	
-	private Label text;
-	
-	private float scale;
-	
-	// We record the width if it is full, so we can adjust accordingly based on specified width
-	private int fullWidth;
-	
-	public GenericBar(int maxValue, int currValue) {
-		super();
-		setFixed(true);
+	/**
+	 * Default constructor of the widget
+	 * 
+	 * @param backgroundTexture
+	 *            the background texture used
+	 * @param progressTexture
+	 *            the progress texture used
+	 */
+	public GenericBar(String backgroundTexture, String progressTexture,
+			int width, int height, Color color) {
+		this.width = width;
+		
 		setLayout(ContainerType.OVERLAY);
-		
-		text = new GenericLabel();
-		
-		gradient = new BarGradient(this);
-		bgGradient = new BarGradient(this);
-		
-		this.maxValue = maxValue;
-		this.currValue = currValue;
-		// Initial recording
-		this.fullWidth = getWidth();
+		setAlign(WidgetAnchor.TOP_LEFT);
+		setWidth(width).setHeight(height).setFixed(true);
+	
+		background = new GenericTexture(backgroundTexture);
+		background.setPriority(RenderPriority.Highest).setWidth(width).setHeight(height).setFixed(true);
+		addChild(background);
+	
+		progress = new GenericTexture(progressTexture);
+		progress.setPriority(RenderPriority.High).setWidth(width).setHeight(height).setFixed(true);
+		addChild(progress);
+	
+		description = (GenericLabel) new GenericLabel("0");
+		description.setScale(0.85f).setPriority(RenderPriority.Normal);
+		description.setTextColor(color);
+	
+		addChild(description);
 	}
 	
-	@Override
-	public void init() {
-		gradient.setFixed(true)
-			.setWidth(getWidth())
-			.setHeight(getHeight());
+	/**
+	 * Set the texture of the widget
+	 * 
+	 * @param background
+	 *            the background texture
+	 * @param progress
+	 *            the progress texture
+	 */
+	public void setTexture(String background, String progress) {
+		this.background.setUrl(background);
+		this.progress.setUrl(progress);
+	}
+	
+	/**
+	 * Set the max value of the counting
+	 * 
+	 * @param value
+	 *            the max value
+	 */
+	public void setMaxValue(int value) {
+		maxValue = value;
+	}
+	
+	/**
+	 * Set the value of the counting
+	 * 
+	 * @param value
+	 *            the new value
+	 */
+	public void setValue(int value) {
+		if (maxValue != 0)
+			progress.setWidth((value * getWidth()) / maxValue);
+		else
+			progress.setWidth(getWidth());
+		description.setText(value + "/" + maxValue);
+		description.setMarginLeft(getWidth() / 2
+				- (description.getText().length() * 5) / 2);
+		deferLayout();
+	}
+	
 		
-		bgGradient.setFixed(true)
-				  .setWidth(getWidth())
-				  .setHeight(getHeight())
-				  .setPriority(RenderPriority.Highest);
-		
-		bgGradient.setBottomColor(
-						gradient.getBottomColor().clone().setAlpha(0.3f)
-				  )
-				  .setTopColor(
-						gradient.getTopColor().clone().setAlpha(0.3f)
-				  );
-
-		gradient.setFixed(true)
-			.setPriority(RenderPriority.High);
-		
-		scale = (float) getHeight() / 10f;
-		text.setScale(scale);
-		
-		
-		
-		this.updateBar();
-
-		addChildren(gradient,bgGradient, text);
-	}
-	
-	public GenericBar(int maxValue) {
-		this(maxValue, maxValue);
-	}
-	
-	public GenericBar() {
-		this(100, 100);
-	}
-	
-	@Override
-	public int getFullWidth() {
-		return fullWidth;
-	}
-	
-	@Override
-	public void setFullWidth(int fullWidth) {
-		this.fullWidth = fullWidth;
-	}
-	
-	@Override
-	public Label getLabel() {
-		return text;
-	}
-	
-	@Override
-	public Gradient getGradient() {
-		return gradient;
-	}
-
-	@Override
-	public float getMaxValue() {
-		return maxValue;
-	}
-
-	@Override
-	public float getCurrentValue() {
-		return currValue;
-	}
-
-	@Override
-	public void setCurrentValue(float value) {
-		if (value >= 0) {
-			currValue = value;
-			this.updateBar();
-		}
-	}
-
-	@Override
-	public void setMaxValue(float value) {
-		if (value >= 0) {
-			maxValue = value;
-			this.updateBar();
-		}
-	}
-
-	@Override
-	public void updateBar() {
-		gradient.setWidthDirect((int) Math.floor((currValue * fullWidth) / maxValue));
-		text.setText((int) currValue + "/" + (int) maxValue);
-		text.setWidth((int) Math.floor(GenericLabel.getStringWidth(text.getText()) * text.getScale()));
-		text.setHeight((int) Math.floor(GenericLabel.getStringHeight(text.getText()) * text.getScale()));
-		text.setMarginLeft((fullWidth / 2) + -(text.getWidth() / 2))
-			.setMarginTop(((getHeight() + 2) - text.getHeight()) / 2);
-	}
-	
 }

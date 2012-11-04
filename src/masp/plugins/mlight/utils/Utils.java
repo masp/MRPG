@@ -15,6 +15,7 @@ import masp.plugins.mlight.data.effects.types.MEffect;
 import masp.plugins.mlight.data.effects.types.WeaponEffect;
 import masp.plugins.mlight.data.effects.types.WeaponEffect.WeaponType;
 import masp.plugins.mlight.data.player.MPlayer;
+import masp.plugins.mlight.data.player.Title;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
@@ -202,6 +203,16 @@ public class Utils {
 			level++;
 		}
 		return level;
+	}
+	
+	public static String joinTitles(List<Title> titles, String separator) {
+		if (titles.size() == 0) return "";
+		StringBuilder builder = new StringBuilder();
+		for (Title title : titles) {
+			builder.append(title.getTitle() + separator);
+		}
+		builder.delete(builder.length() - separator.length(), builder.length());
+		return builder.toString();
 	}
 	
 	public static int getExpByLevel(int level, double exp_rate) {

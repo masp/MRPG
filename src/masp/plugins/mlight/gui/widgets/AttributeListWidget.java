@@ -26,7 +26,7 @@ public class AttributeListWidget extends GenericListWidget {
 		for (int i = posPage * 8; i < page * 8 && i < attributes.size(); i++) {
 			Attribute att = attributes.get(i);
 			AttributeListItemWidget item = new AttributeListItemWidget(ChatColor.DARK_GRAY + Utils.getNiceName(att.getName()), 
-					ChatColor.GRAY + "(" + player.getSkillValue(att.getName()) + "/" + att.getMaxLevel() + ") - " + att.getCost() + " LP",
+					ChatColor.GRAY + "(" + player.getAttributeValue(att.getName()) + "/" + att.getMaxLevel() + ") - " + att.getCost() + " LP",
 					att);
 			this.addItem(item);
 			

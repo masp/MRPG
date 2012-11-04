@@ -116,6 +116,7 @@ public class MRPG extends JavaPlugin implements Listener {
 				20L, 
 				20L);
 		
+		
 		getLogger().info("Plugin was successfully enabled!");
 	}
 	

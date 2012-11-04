@@ -89,15 +89,15 @@ public abstract class InventoryGui extends InventoryView {
 
 		//calculate square in the inventory.
 		int ix, iy;
-		ix = index%9;
-		if(index<9) iy=3;
-		else iy = ( (index-ix) / 9) - 1;
+		ix = index % 9;
+		if (index < 9 ) iy = 3;
+		else iy = ((index - ix) / 9) - 1;
 
 		//calculate exact coordinates in the inventory.
-		int ax,ay;
-		ax = 18*ix;
-		if(iy!=3) ay=18*iy;
-		else ay = 18*3 + 4;
+		int ax, ay;
+		ax = 18 * ix;
+		if(iy != 3) ay = 18 * iy;
+		else ay = 18 * 3 + 4;
 		Point result = getInventoryOffset();
 		result.translate(ax, ay);
 		return result;
@@ -164,6 +164,12 @@ public abstract class InventoryGui extends InventoryView {
 		slots.get(id).setItem(new ItemStack(0), false);
 		if(update) updateContents(id, null);
 	}
+	
+	public void updateContents() {
+		for (int i = 0; i < 36; i++) {
+			slots.get(i).setItem(inventory.getItem(i));
+		}
+	}
 
 	/**
 	 * Copies the ItemStack's contents to a
@@ -183,7 +189,7 @@ public abstract class InventoryGui extends InventoryView {
 
 	public void eject(ItemStack is) {
 		Location l = sp.getLocation();
-		l.getWorld().dropItem(l, is);
+		l.getWorld().dropItem(l, is).setVelocity(sp.getLocation().getDirection().setY(0.2355f));
 	}
 
 	/**

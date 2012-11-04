@@ -200,7 +200,7 @@ public class DamageListener implements Listener {
 	 */
 	public void handlePlayerShootPlayer(MPlayer attacker, MPlayer defender, Arrow shot) {
 		shot.remove();
-		List<EffectCollection> parts = new ArrayList<EffectCollection>(attacker.getSkills());
+		List<EffectCollection> parts = new ArrayList<EffectCollection>(attacker.getAttributes());
 		parts.add(attacker.getInventory());
 		int totalDamage = Utils.getTotalDamage(MRPG.getItemManager().getItem(-1).getAttack(), 
 				defender, 
@@ -229,7 +229,7 @@ public class DamageListener implements Listener {
 		
 		MCreature cDefender = MRPG.getMobManager().getCreature(defender.getType().name());
 		EffectCollection effects = MRPG.getMobManager().getCreatureEffects(defender);
-		List<EffectCollection> parts = new ArrayList<EffectCollection>(attacker.getSkills());
+		List<EffectCollection> parts = new ArrayList<EffectCollection>(attacker.getAttributes());
 		parts.add(attacker.getInventory());
 		int totalDamage = Utils.getTotalDamage(MRPG.getItemManager().getItem(-1).getAttack(), 
 				effects, 

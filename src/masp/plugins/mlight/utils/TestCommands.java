@@ -58,6 +58,8 @@ public class TestCommands implements CommandExecutor, Listener {
 				}
 				player.sendMessage(ChatColor.RED + "-- End of Effects --");
 				return true;
+			} else if (label.equalsIgnoreCase("mheal")) {
+				
 			}
 		}
 		return false;

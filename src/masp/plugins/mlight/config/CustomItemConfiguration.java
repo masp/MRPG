@@ -28,7 +28,7 @@ public class CustomItemConfiguration extends Configuration {
 		config.set("custom-items.example-item.badge.chat-title", ChatColor.RED + "[Red Chat Title Here]");
 		config.set("custom-items.example-item.cape.url", "http://www.capeurlhere.com");
 		config.set("custom-items.example-item.attack-effects.decimal.general_damage", "your general damage");
-		config.set("custom-items.example-item.defense-effects.decimal.general_resistance", "your general resistance");
+		config.set("custom-items.example-item.defense-effects.decimal.general_defense", "your general resistance");
 		
 		try {
 			config.save(getFile());
@@ -78,7 +78,7 @@ public class CustomItemConfiguration extends Configuration {
 		}
 		
 		if (getConfig().getConfigurationSection("custom-items." + name + ".defense-effects") != null) {
-			super.loadEffects(item.getAttack(), "custom-items." + name + ".defense-effects");
+			super.loadEffects(item.getDefense(), "custom-items." + name + ".defense-effects");
 		}
 	}
 

@@ -87,8 +87,8 @@ public class AttributeMenu extends GenericPopup {
 			 .setFixed(true);
 		
 		List<Attribute> listAttributes = Arrays.asList(
-				mPlayer.getSkills().toArray(
-						new Attribute[mPlayer.getSkills().size()]));
+				mPlayer.getAttributes().toArray(
+						new Attribute[mPlayer.getAttributes().size()]));
 		
 		attList = new AttributeListWidget(listAttributes, player, this, page);
 		attList.setScrollBarPolicy(Orientation.VERTICAL, ScrollBarPolicy.SHOW_NEVER);
@@ -186,8 +186,8 @@ public class AttributeMenu extends GenericPopup {
 		}
 		
 		attList.updateList(Arrays.asList(
-				player.getSkills().toArray(
-						new Attribute[player.getSkills().size()])), player, page);
+				player.getAttributes().toArray(
+						new Attribute[player.getAttributes().size()])), player, page);
 		
 		prevButton.setEnabled(page > 1);
 		nextButton.setEnabled(page < getMaxPage());
@@ -207,7 +207,7 @@ public class AttributeMenu extends GenericPopup {
 				AttributeListItemWidget nItem = (AttributeListItemWidget) item;
 				Attribute att = nItem.getAttribute();
 				nItem.setTitle(ChatColor.DARK_GRAY + Utils.getNiceName(att.getName()));
-				nItem.setText(ChatColor.GRAY + "(" + MRPG.getPlayer(getPlayer()).getSkillValue(att.getName()) + "/" + att.getMaxLevel() + ") - " + att.getCost() + " LP");
+				nItem.setText(ChatColor.GRAY + "(" + MRPG.getPlayer(getPlayer()).getAttributeValue(att.getName()) + "/" + att.getMaxLevel() + ") - " + att.getCost() + " LP");
 			}
 		}
 		attList.setDirty(true);
