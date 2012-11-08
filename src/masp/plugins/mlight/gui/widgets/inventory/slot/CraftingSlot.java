@@ -1,6 +1,6 @@
 package masp.plugins.mlight.gui.widgets.inventory.slot;
 
-import java.util.Map;
+import java.util.HashMap;
 
 import masp.plugins.mlight.gui.menus.MCustomInventory;
 
@@ -36,10 +36,8 @@ public class CraftingSlot extends InventorySlot {
 		ItemStack item = this.getItem();
 		Player player = (Player) this.getGui().getPlayer();
 		Inventory pInv = player.getInventory();
-		pInv.addItem(item);
-		this.getGui().updateContents();
 		// Returns the left overs
-		Map<Integer, ItemStack> returns = pInv.addItem(item);
+		HashMap<Integer, ItemStack> returns = pInv.addItem(item);
 		if (returns != null && returns.size() >= 0 && returns.get(0) != null) {
 			ItemStack rItem = returns.get(0);
 			
@@ -50,6 +48,7 @@ public class CraftingSlot extends InventorySlot {
 			this.getCustomInv().setCraftingSlot(this.getSlotId(), null);
 		}
 		this.getCustomInv().onCraft();
+		this.getGui().updateContents();
 	}
 	
 	@Override

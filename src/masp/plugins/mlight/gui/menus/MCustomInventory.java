@@ -10,6 +10,7 @@ import masp.plugins.mlight.gui.widgets.inventory.slot.ArmorSlot;
 import masp.plugins.mlight.gui.widgets.inventory.slot.BadgeSlot;
 import masp.plugins.mlight.gui.widgets.inventory.slot.CapeSlot;
 import masp.plugins.mlight.gui.widgets.inventory.slot.CraftingSlot;
+import masp.plugins.mlight.gui.widgets.inventory.slot.DeleteSlot;
 import masp.plugins.mlight.gui.widgets.inventory.slot.ResultSlot;
 import masp.plugins.mlight.utils.Data;
 import net.minecraft.server.CraftingManager;
@@ -73,6 +74,8 @@ public class MCustomInventory extends InventoryGui {
 		addSlot(crafts[1]);
 		addSlot(crafts[2]);
 		addSlot(crafts[3]);
+		
+		addSlot(new DeleteSlot(result.getX() - 9, result.getY() - 31, this));
 	}
 	
 	public void setCraftingSlot(int i, ItemStack itemstack) {
@@ -127,6 +130,10 @@ public class MCustomInventory extends InventoryGui {
 			craftResult.setItem(0, null);
 			return false;
 		}
+	}
+	
+	public IInventory getCrafting() {
+		return crafting;
 	}
 
 	@Override

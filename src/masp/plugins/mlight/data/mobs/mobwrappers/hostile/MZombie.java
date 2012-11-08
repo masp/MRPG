@@ -29,8 +29,8 @@ import org.bukkit.entity.LivingEntity;
 
 public class MZombie extends EntityZombie implements MDangerMob {
 	
-	private short dangerLevel;
-	private boolean changed = false;
+	private transient short dangerLevel;
+	private transient boolean changed = false;
 	
 	public MZombie(World world) {
 		super(world);

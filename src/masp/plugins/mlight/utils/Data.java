@@ -7,7 +7,7 @@ public class Data {
 	
 	public static final String HUD_BACKGROUND = "https://dl.dropbox.com/u/26497130/MRPG/mrpg_hud_3_label.png";
 	public static final String HUD_BUBBLE = "https://dl.dropbox.com/u/26497130/MRPG/mrpg_hud_3_bubble.png";
-	private static final String INV_BACKGROUND = "https://dl.dropbox.com/u/26497130/inventoryarmor.png";
+	private static final String INV_BACKGROUND = "https://dl.dropbox.com/u/26497130/MRPG/inventoryarmor.png";
 	public static final String BAG_URL = "https://dl.dropbox.com/u/26497130/MRPG/Bag.png";
 	
 	public static Texture getInventoryBackground() {

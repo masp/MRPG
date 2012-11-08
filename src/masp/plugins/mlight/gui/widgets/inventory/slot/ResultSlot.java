@@ -1,7 +1,9 @@
 package masp.plugins.mlight.gui.widgets.inventory.slot;
 
+import masp.plugins.mlight.MRPG;
 import masp.plugins.mlight.gui.menus.MCustomInventory;
 
+import org.bukkit.Bukkit;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -38,6 +40,13 @@ public class ResultSlot extends InventorySlot {
 			inv.addItem(this.getItem());
 			((MCustomInventory) this.getGui()).onTake();
 		}
+		this.getGui().updateContents();
+		Bukkit.getScheduler().scheduleSyncDelayedTask(MRPG.getInstance(), new Runnable() {
+			@Override
+			public void run() {
+				((MCustomInventory) getGui()).onCraft();
+			}
+		}, 2L);
 	}
 	
 }

@@ -16,6 +16,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.util.Vector;
 import org.getspout.spoutapi.gui.Container;
 import org.getspout.spoutapi.gui.ContainerType;
 import org.getspout.spoutapi.gui.GenericContainer;
@@ -63,6 +64,7 @@ public abstract class InventoryGui extends InventoryView {
 		if(ioe.isCancelled()) return false;
 		cont.setLayout(ContainerType.OVERLAY).setAnchor(WidgetAnchor.CENTER_CENTER).setWidth(width).setHeight(height).setX(-width/2).setY(-height/2);
 		cont.addChild(getBackground().setPriority(RenderPriority.High));
+		
 		for(int i = 0; i < slots.size(); i++) cont.addChild(slots.get(i));
 		for(Widget w : getWidgets()) cont.addChild(w);
 		PopupScreen pop = (PopupScreen) new GenericPopup() {
@@ -72,7 +74,7 @@ public abstract class InventoryGui extends InventoryView {
 				eject(is);
 			}
 		};
-		pop.attachWidget(MRPG.getInstance(), cont);
+		pop.attachWidgets(MRPG.getInstance(), cont);
 		sp.getMainScreen().attachPopupScreen(pop);
 		return true;
 	}
@@ -188,8 +190,9 @@ public abstract class InventoryGui extends InventoryView {
 	}
 
 	public void eject(ItemStack is) {
-		Location l = sp.getLocation();
-		l.getWorld().dropItem(l, is).setVelocity(sp.getLocation().getDirection().setY(0.2355f));
+		Location loc = this.getPlayer().getLocation();
+		Vector dir = loc.getDirection();
+		loc.getWorld().dropItem(getPlayer().getEyeLocation(), is).setVelocity(dir.normalize().divide(new Vector(2.5f, 1f, 2.5f)));
 	}
 
 	/**
